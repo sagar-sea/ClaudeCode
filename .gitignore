@@ -1,0 +1,30 @@
+# Exclude folders starting with dot
+.claude/
+.vscode/
+
+# Exclude dot files (except .gitignore itself)
+.*
+!.gitignore
+
+# Exclude generated/cached files
+genai_research_cache.json
+*.xlsx  # Excel files with data
+combined_names.xlsx
+config.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
