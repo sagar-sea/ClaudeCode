@@ -1,30 +1,72 @@
-# Exclude folders starting with dot
-.claude/
-.vscode/
-
-# Exclude dot files (except .gitignore itself)
-.*
-!.gitignore
-
-# Exclude generated/cached files
-genai_research_cache.json
-*.xlsx  # Excel files with data
-combined_names.xlsx
-config.json
-
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Node
-node_modules/
+# Virtual Environment
+venv/
+ENV/
+env/
 
 # IDE
 .vscode/
 .idea/
-
-# OS
+*.swp
+*.swo
+*~
 .DS_Store
-Thumbs.db
+
+# Logs
+*.log
+*.txt
+
+# Cache
+*.cache
+genai_research_cache.json
+__pycache__/
+
+# Excel files (if temporary)
+~$*.xlsx
+~$*.xls
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+
+# Personal/System specific
+*.lnk
+desktop.ini
+
+# Git
+.git/
+
+# Claude/AI specific
+.claude/
+.claude.json
+
+# Output directories (optional - uncomment if you don't want to track generated content)
+# generated_articles/

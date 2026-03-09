@@ -32,7 +32,7 @@ This workflow automates the process of researching the latest Generative AI topi
 1. Open Command Prompt or PowerShell
 2. Navigate to the ClaudeCode directory:
    ```
-   cd C:\Users\Sagar\ClaudeCode
+   cd %USERPROFILE%\ClaudeCode
    ```
 3. Run the script:
    ```
@@ -69,8 +69,8 @@ To run this automatically every week:
 2. Create a Basic Task
 3. Set trigger to "Weekly"
 4. Set action to start a program:
-   - Program: `C:\Users\Sagar\ClaudeCode\run_genai_research.bat`
-   - Start in: `C:\Users\Sagar\ClaudeCode`
+   - Program: `%USERPROFILE%\ClaudeCode\run_genai_research.bat`
+   - Start in: `%USERPROFILE%\ClaudeCode`
 
 ## Requirements
 

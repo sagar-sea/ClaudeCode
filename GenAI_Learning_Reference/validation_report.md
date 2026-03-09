@@ -1,5 +1,5 @@
 # HTML Validation Report
-## File: `C:\Users\Sagar\ClaudeCode\GenAI_Learning_Reference\index.html`
+## File: `GenAI_Learning_Reference\index.html`
 
 **Validation Date:** March 8, 2026
 **Validator:** code-validator-tester agent

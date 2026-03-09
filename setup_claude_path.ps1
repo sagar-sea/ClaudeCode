@@ -1,5 +1,5 @@
 # Add Claude Code to PATH if not already present
-$claudePath = "C:\Users\Sagar\.local\bin"
+$claudePath = "$env:USERPROFILE\.local\bin"
 $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 
 if (-not ($currentPath -like "*$claudePath*")) {

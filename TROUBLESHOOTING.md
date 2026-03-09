@@ -6,7 +6,7 @@
 **Problem**: `claude` command not recognized
 **Solution**:
 - Run the setup_claude_path.ps1 script
-- Or manually add `C:\Users\Sagar\.local\bin` to your PATH
+- Or manually add `%USERPROFILE%\.local\bin` to your PATH
 - Restart your command prompt/terminal
 
 ### 2. Ollama Server Won't Start

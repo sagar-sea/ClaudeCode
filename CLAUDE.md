@@ -65,9 +65,9 @@ python add_analysis_fixed.py
 - Creation of desktop shortcuts
 - Ollama server management
 
-**Working Directory**: Defaults to `C:\Users\Sagar\ClaudeCode`
+**Working Directory**: Defaults to `%USERPROFILE%\ClaudeCode`
 
-**Claude Path**: Configured as `C:\Users\Sagar\.local\bin\claude.exe`
+**Claude Path**: Configured as `%USERPROFILE%\.local\bin\claude.exe`
 
 ## Setup and Troubleshooting
 

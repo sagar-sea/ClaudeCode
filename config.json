@@ -1,0 +1,32 @@
+{
+  "article_word_count": 1400,
+  "research_depth": 5,
+  "cache_duration_hours": 24,
+  "retry_attempts": 3,
+  "sources": {
+    "anthropic": {
+      "url": "https://www.anthropic.com/research",
+      "selector": "article, .research-post"
+    },
+    "google_ai": {
+      "url": "https://blog.google/technology/ai/",
+      "selector": ".blog-post, .post-content"
+    },
+    "openai": {
+      "url": "https://openai.com/research",
+      "selector": ".research-item, .post-content"
+    },
+    "deepseek": {
+      "url": "https://github.com/deepseek-ai/DeepSeek-Coder",
+      "selector": ".repo-content"
+    },
+    "medium_genai": {
+      "url": "https://medium.com/tag/generative-ai/latest",
+      "selector": ".postArticle, .post-preview"
+    },
+    "tldr": {
+      "url": "https://tldr.tech/newsletter/archive",
+      "is_rss": true
+    }
+  }
+}

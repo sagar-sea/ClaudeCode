@@ -44,11 +44,12 @@ class OllamaClaudeLauncher:
         self.model_type = tk.StringVar(value="local")
 
         # Claude Code path
-        self.claude_path = r"C:\Users\Sagar\.local\bin\claude.exe"
+        user_profile = os.environ.get('USERPROFILE', '')
+        self.claude_path = os.path.join(user_profile, '.local', 'bin', 'claude.exe')
 
         # Ollama paths - try to find in common locations
         self.ollama_paths = [
-            r"C:\Users\Sagar\AppData\Local\Programs\Ollama\ollama.exe",
+            os.path.join(user_profile, 'AppData', 'Local', 'Programs', 'Ollama', 'ollama.exe'),
             r"C:\Program Files\Ollama\ollama.exe",
             r"C:\Program Files (x86)\Ollama\ollama.exe"
         ]
@@ -501,7 +502,7 @@ class OllamaClaudeLauncher:
                 return
 
         # Working directory for Claude Code
-        claude_workdir = r"C:\Users\Sagar\ClaudeCode"
+        claude_workdir = os.path.join(os.environ.get('USERPROFILE', ''), 'ClaudeCode')
 
         # Create directory if it doesn't exist
         if not os.path.exists(claude_workdir):
