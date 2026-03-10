@@ -1,95 +1,118 @@
-# Weekly GenAI Research and Article Writing Workflow
+# Weekly GenAI Research and Content Creation Workflow
 
-This repository contains a comprehensive workflow for researching the latest developments in Generative AI and automatically generating Medium articles.
+This folder contains a comprehensive AI-assisted workflow for researching the latest developments in Generative AI and creating various types of content including Medium articles and LinkedIn posts.
+
+## Overview
+
+This is a prompt-based workflow designed to be used with AI assistants (Claude, ChatGPT, Gemini, etc.) to streamline the process of staying current with GenAI developments and creating engaging content.
+
+## What's Included
+
+- **genai_weekly_research_prompt.md** - Complete workflow instructions for AI assistants
+- **genai_research_cache.json** - Cache file for storing research data (auto-generated)
 
 ## Features
 
-- **Multi-source Research**: Collects information from leading AI research blogs and publications
-- **Intelligent Idea Generation**: Uses keyword analysis to identify trending topics
-- **Interactive Selection**: Allows users to choose which article idea to develop
-- **Professional Article Writing**: Generates complete Medium-ready articles with proper formatting
-- **Caching System**: Caches research data to avoid repeated web requests
-- **Configurable Settings**: Customizable parameters for research depth and article length
+- **Flexible Intent Assessment**: Determines whether you want to create content or just get information
+- **Multi-source Research**: Guides research from leading AI blogs and publications
+- **Multiple Content Types**: 
+  - Medium articles (1,200-1,500 words)
+  - LinkedIn posts (300-500 words, engineering-focused)
+  - Learning documents
+- **LinkedIn Post Topics**: Generates practical, developer-focused topics similar to:
+  - "Async Python for AI Engineers"
+  - "Prompt Caching: Stop Paying to Recompute the Same Tokens"
+  - "RAG Pipeline Optimization"
+  - And more engineering-focused insights
+- **Image Generation Prompts**: Creates detailed prompts for technical diagrams and infographics
 
-## Sources
+## Research Sources
 
-The workflow collects research from:
+The workflow covers:
 
 1. **Anthropic** - https://www.anthropic.com/research
 2. **Google AI** - https://blog.google/technology/ai/
-3. **OpenAI** - https://openai.com/research
-4. **DeepSeek** - https://github.com/deepseek-ai/DeepSeek-Coder
-5. **Medium GenAI** - https://medium.com/tag/generative-ai/latest
-6. **TLDR Newsletter** - https://tldr.tech/newsletter/archive
+3. **Google Research** - https://research.google/
+4. **OpenAI** - https://openai.com/research
+5. **DeepSeek Papers** - https://huggingface.co/collections/Presidentlin/deepseek-papers
+6. **Kiro Blogs** - https://kiro.dev/blog/
+7. **Medium AI** - https://medium.com/tag/ai
+8. **TLDR Newsletter** - https://tldr.tech/ (special focus on AI/ML section)
 
-## Requirements
+## How to Use
 
-- Python 3.7+
-- Required Python packages (automatically installed by the batch script):
-  - requests
-  - beautifulsoup4
-  - feedparser
-  - schedule
-  - nltk
+### With Claude/ChatGPT/Gemini
 
-## Usage
+1. Open your AI assistant
+2. Upload or paste the content from `genai_weekly_research_prompt.md`
+3. Tell the assistant what you want to do:
+   - "I want to create a LinkedIn post about recent AI developments"
+   - "Give me a weekly update on GenAI news"
+   - "Help me write a Medium article about [topic]"
+4. Follow the interactive workflow
 
-### Manual Execution
+### Workflow Steps
 
-1. Double-click `run_genai_research.bat` or run from command line:
-   ```
-   python genai_weekly_research.py
-   ```
+1. **Intent Assessment** - AI determines if you want content creation or just information
+2. **Research Phase** - AI researches the specified sources
+3. **Content Type Selection** - Choose between:
+   - Medium article
+   - LinkedIn post
+   - Learning document
+   - Information summary only
+4. **Topic Generation** - AI generates relevant topics based on research
+5. **Selection & Creation** - Choose a topic and AI creates the content
+6. **Image Prompts** - Get detailed prompts for creating visuals
 
-2. The script will:
-   - Collect recent research from all sources
-   - Generate 4-5 article ideas based on trending topics
-   - Prompt you to select an idea
-   - Show detailed information about the selected topic
-   - Generate a complete Medium article (7-8 minute read)
-   - Save the article in the `generated_articles` folder
+## Content Types
 
-### Automated Scheduling
+### Medium Articles
+- 7-8 minute read (~1,200-1,500 words)
+- Professional formatting with sections
+- Technical depth with accessibility
+- Includes references and further reading
 
-To schedule weekly execution:
+### LinkedIn Posts
+- 300-500 words
+- Engineering-focused and practical
+- Problem → Solution → Impact structure
+- Includes image generation prompts for technical diagrams
+- Examples:
+  - Performance optimization techniques
+  - Cost-saving strategies
+  - Architecture best practices
+  - Production engineering insights
 
-1. Open Task Scheduler (taskschd.msc)
-2. Create a new task
-3. Set trigger to weekly
-4. Set action to run `schedule_genai_research.bat`
-5. Configure appropriate user permissions
+### Learning Documents
+- Comprehensive explanations
+- Step-by-step guides
+- Visual diagrams
+- Best practices and troubleshooting
 
-## Configuration
+## Output Location
 
-The workflow can be customized using `config.json`:
+Generated content is typically saved in the `generated_articles` folder (created automatically when needed).
 
-- `article_word_count`: Target length for generated articles
-- `research_depth`: Number of articles to analyze per source
-- `cache_duration_hours`: How long to cache research data
-- `retry_attempts`: Number of times to retry failed requests
+## Tips for Best Results
 
-## Output
+- Be specific about your content goals
+- Mention if you want focus on specific AI tools or developments
+- Request information-only mode if you just want updates
+- Ask for topic refinement if the generated ideas don't match your needs
+- Use the image generation prompts with tools like DALL-E, Midjourney, or NotebookLM
 
-Generated articles are saved in the `generated_articles` directory with filenames that include the article title and date.
+## Customization
 
-## Troubleshooting
+You can modify `genai_weekly_research_prompt.md` to:
+- Add or remove research sources
+- Adjust content length requirements
+- Change the tone or style guidelines
+- Add specific topics of interest
+- Customize LinkedIn post categories
 
-- If you encounter SSL certificate errors, update your Python certificates
-- If certain sources fail to load, check if the website structure has changed
-- For proxy issues, configure your system proxy settings
-- If you get "ModuleNotFoundError" errors, ensure all dependencies are installed with:
-  ```
-  pip install -r requirements.txt
-  ```
-- If packages are installed but not found, check that you're using the correct Python interpreter:
-  ```
-  python -m pip install -r requirements.txt
-  ```
-- On Windows, you might need to use `py` instead of `python`:
-  ```
-  py -m pip install -r requirements.txt
-  ```
+## Notes
 
-## Contributing
-
-Feel free to fork this repository and submit pull requests with improvements to the research sources, idea generation algorithms, or article templates.
+- Research data is cached in `genai_research_cache.json` to avoid redundant lookups
+- The workflow adapts based on your stated goals
+- Not all sessions need to result in content creation
+- Focus is on practical, actionable insights for AI engineers and developers
