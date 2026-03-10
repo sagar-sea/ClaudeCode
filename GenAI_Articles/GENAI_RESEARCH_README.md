@@ -1,118 +1,117 @@
 # Weekly GenAI Research and Content Creation Workflow
 
-This folder contains a comprehensive AI-assisted workflow for researching the latest developments in Generative AI and creating various types of content including Medium articles and LinkedIn posts.
+This folder contains a comprehensive AI-assisted workflow for researching the latest developments in Generative AI and creating content including Medium articles, LinkedIn posts, and Twitter/X threads.
 
 ## Overview
 
-This is a prompt-based workflow designed to be used with AI assistants (Claude, ChatGPT, Gemini, etc.) to streamline the process of staying current with GenAI developments and creating engaging content.
+A prompt-based workflow designed to be used with AI assistants (Claude, ChatGPT, Gemini, etc.) to stay current with GenAI developments and create high-quality, engineering-focused content. The workflow is split into two pathways based on your intent.
 
 ## What's Included
 
-- **genai_weekly_research_prompt.md** - Complete workflow instructions for AI assistants
-- **genai_research_cache.json** - Cache file for storing research data (auto-generated)
+| File | Description |
+|------|-------------|
+| `genai_weekly_research_prompt.md` | The master workflow — 8-step instruction set for AI assistants |
+| `article_generation_prompts.md` | Ready-to-use starter prompts to rapidly kick off specific session types |
 
-## Features
+## Two Pathways
 
-- **Flexible Intent Assessment**: Determines whether you want to create content or just get information
-- **Multi-source Research**: Guides research from leading AI blogs and publications
-- **Multiple Content Types**: 
-  - Medium articles (1,200-1,500 words)
-  - LinkedIn posts (300-500 words, engineering-focused)
-  - Learning documents
-- **LinkedIn Post Topics**: Generates practical, developer-focused topics similar to:
-  - "Async Python for AI Engineers"
-  - "Prompt Caching: Stop Paying to Recompute the Same Tokens"
-  - "RAG Pipeline Optimization"
-  - And more engineering-focused insights
-- **Image Generation Prompts**: Creates detailed prompts for technical diagrams and infographics
+| Pathway | When to Use | Output |
+|---------|-------------|--------|
+| **Pathway A – Content Creation** | You want to publish something | Medium article, LinkedIn post, Twitter/X thread, or Learning Document |
+| **Pathway B – Information Only** | You just want to stay informed | Categorized briefing of the latest GenAI developments |
+
+Both pathways always end with a **Critical Pivot Step** — if you're on Pathway B and something catches your eye, you can instantly shift into content creation without restarting.
+
+## Workflow Steps (Pathway A)
+
+1. **Unified Assessment** — Determine goal, pathway, and format
+2. **Research Phase** — Live web research across 20+ curated sources
+3. **Pathway Decision** — Route to content creation or information briefing
+4. **Idea Generation** — 5–8 unique, engineering-focused topic ideas with hooks and angles
+5. **User Selection** — Pick one (or let the AI choose)
+6. **Topic Explanation** — Deep dive into the selected topic before writing
+7. **Content Creation** — Full post/article/thread in the chosen format
+8. **Revision & Iteration** — Request unlimited targeted edits until satisfied
 
 ## Research Sources
 
-The workflow covers:
+**Primary AI Research & Company Blogs:**
+- Anthropic (https://www.anthropic.com/research, https://www.anthropic.com/news)
+- Google DeepMind / Gemini (https://blog.google/technology/ai/)
+- Google Research (https://research.google/)
+- OpenAI (https://openai.com/research)
+- DeepSeek Papers (https://huggingface.co/collections/Presidentlin/deepseek-papers)
+- Kiro (https://kiro.dev/blog/)
 
-1. **Anthropic** - https://www.anthropic.com/research
-2. **Google AI** - https://blog.google/technology/ai/
-3. **Google Research** - https://research.google/
-4. **OpenAI** - https://openai.com/research
-5. **DeepSeek Papers** - https://huggingface.co/collections/Presidentlin/deepseek-papers
-6. **Kiro Blogs** - https://kiro.dev/blog/
-7. **Medium AI** - https://medium.com/tag/ai
-8. **TLDR Newsletter** - https://tldr.tech/ (special focus on AI/ML section)
+**AI News Aggregators & Newsletters:**
+- The Rundown AI, TLDR AI, Ben's Bites, AI News Guru
+- The Batch (DeepLearning.AI), Import AI, Alpha Signal
+- The Neuron, GenAI.works, Latent Space
 
-## How to Use
-
-### With Claude/ChatGPT/Gemini
-
-1. Open your AI assistant
-2. Upload or paste the content from `genai_weekly_research_prompt.md`
-3. Tell the assistant what you want to do:
-   - "I want to create a LinkedIn post about recent AI developments"
-   - "Give me a weekly update on GenAI news"
-   - "Help me write a Medium article about [topic]"
-4. Follow the interactive workflow
-
-### Workflow Steps
-
-1. **Intent Assessment** - AI determines if you want content creation or just information
-2. **Research Phase** - AI researches the specified sources
-3. **Content Type Selection** - Choose between:
-   - Medium article
-   - LinkedIn post
-   - Learning document
-   - Information summary only
-4. **Topic Generation** - AI generates relevant topics based on research
-5. **Selection & Creation** - Choose a topic and AI creates the content
-6. **Image Prompts** - Get detailed prompts for creating visuals
+**Engineering & Community:**
+- Hacker News, r/MachineLearning, r/LocalLLaMA
+- Pragmatic Engineer, Simon Willison, Eugene Yan, Chip Huyen
+- Hugging Face Blog
 
 ## Content Types
 
 ### Medium Articles
-- 7-8 minute read (~1,200-1,500 words)
-- Professional formatting with sections
-- Technical depth with accessibility
-- Includes references and further reading
+- ~1,200–1,500 words (7–8 min read)
+- Full Markdown formatting
+- Includes infographic image generation prompt with author branding
+- Accompanied by a LinkedIn promotional post
 
 ### LinkedIn Posts
-- 300-500 words
-- Engineering-focused and practical
-- Problem → Solution → Impact structure
-- Includes image generation prompts for technical diagrams
-- Examples:
-  - Performance optimization techniques
-  - Cost-saving strategies
-  - Architecture best practices
-  - Production engineering insights
+- 150–250 words (ruthlessly concise and scannable)
+- Structure: Hook → Problem → Fix → How It Works → Impact
+- Includes a detailed infographic/diagram generation prompt
+- No hashtags, no emojis (unless contextually appropriate)
+
+### Twitter / X Threads
+- 5–7 tweets, each under 280 characters
+- Strong hook → Problem → Solution → Quantifiable impact → Takeaway
 
 ### Learning Documents
-- Comprehensive explanations
-- Step-by-step guides
-- Visual diagrams
-- Best practices and troubleshooting
+- Comprehensive deep-dive reference documents
+- Step-by-step guides, comparison tables, troubleshooting sections
+- Designed to be saved and referenced long-term
 
-## Output Location
+## Quick-Start Prompts (`article_generation_prompts.md`)
 
-Generated content is typically saved in the `generated_articles` folder (created automatically when needed).
+Instead of writing your own prompt from scratch, use one of these ready-to-go starters:
+
+| Prompt | Best For |
+|--------|----------|
+| **Interactive Starter** | General sessions — AI asks your goal first |
+| **Direct-to-Content (Fast Track)** | You know exactly what you want to create |
+| **Weekly Briefing** | Information-only, no content creation |
+| **Deep-Dive Failure Analysis** | Contrarian / production war stories |
+| **Instant Medium Article Generator** | Long-form, second-order effects focus |
+| **Instant LinkedIn Post Generator** | Engineering micro-optimizations |
+| **Instant Twitter/X Thread Generator** | Bold, controversial technical threads |
+
+## Edge Case Handling
+
+The workflow includes explicit rules for 23 identified edge cases, including:
+- Unfilled/vague topic placeholders → clarify before researching
+- User skips steps → honor the skip, never loop back
+- Mid-session pathway changes → adapt without restarting
+- All ideas rejected → regenerate with completely different strategy angles
+- Unsupported output formats → adapt closest structural equivalent
+- Inaccessible source URLs → fallback to web search with noted limitations
+- Sparse news weeks → auto-widen to 30-day window with user notice
 
 ## Tips for Best Results
 
-- Be specific about your content goals
-- Mention if you want focus on specific AI tools or developments
-- Request information-only mode if you just want updates
-- Ask for topic refinement if the generated ideas don't match your needs
-- Use the image generation prompts with tools like DALL-E, Midjourney, or NotebookLM
-
-## Customization
-
-You can modify `genai_weekly_research_prompt.md` to:
-- Add or remove research sources
-- Adjust content length requirements
-- Change the tone or style guidelines
-- Add specific topics of interest
-- Customize LinkedIn post categories
+- Use the ready-made prompts from `article_generation_prompts.md` to fast-track sessions
+- If you don't specify a topic, the AI will do a broad sweep across all GenAI categories
+- You can skip any step by explicitly saying so (e.g., "skip the explanation")
+- Request edits after the content is generated — the revision loop has no limit
+- Use the image generation prompts in ChatGPT, Gemini, or Midjourney for visuals
 
 ## Notes
 
-- Research data is cached in `genai_research_cache.json` to avoid redundant lookups
-- The workflow adapts based on your stated goals
 - Not all sessions need to result in content creation
+- Always uses live web search — not cached training data
 - Focus is on practical, actionable insights for AI engineers and developers
+- Author branding (Sagar Rathkanthiwar) is automatically included in image prompts

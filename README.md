@@ -4,7 +4,7 @@ A collection of AI/GenAI tools, scripts, and resources for working with Large La
 
 ## 🚀 Features
 
-- **GenAI Article Generator**: Automated weekly research and article generation on GenAI topics
+- **GenAI Article Generator**: 8-step AI-assisted workflow for weekly GenAI research and content creation (LinkedIn posts, Medium articles, Twitter/X threads, Learning Documents). Includes two pathways (content creation vs. information briefing), ready-to-use starter prompts, and built-in handling for 23 edge cases.
 - **GenAI Learning Reference**: Interactive HTML reference guide for AI/ML concepts
 - **Ollama & Claude Launcher**: Automated launcher scripts for local AI development
 - **Excel Automation**: Python scripts for data analysis and Excel manipulation
