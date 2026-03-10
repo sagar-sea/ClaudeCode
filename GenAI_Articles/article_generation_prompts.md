@@ -32,15 +32,15 @@ Please execute **Step 2 (Research Phase)** right now using your web browsing/sea
 ---
 
 ## 3. The Weekly Briefing (Information Only)
-**What it does:** Bypasses Step 1 and forces the AI into "Pathway B". Perfect for when you just want to consume the news over your morning coffee without the pressure of creating content.
+**What it does:** Bypasses Step 1 and forces the AI into "Pathway B". Perfect for when you just want to consume the news over your morning coffee without the pressure of creating content. **Tip:** Fill in a specific topic to focus the research, or remove the topic placeholder entirely to trigger a **full broad sweep** across all GenAI categories.
 
 **The Prompt:**
 ```text
 Act as my expert AI research assistant. Please review the attached `genai_weekly_research_prompt.md` file. 
 
-Today, we are taking **Pathway B: Information Only**. I do not want to create any content. I am specifically interested in [general AI developments / new tooling / model updates].
+Today, we are taking **Pathway B: Information Only**. I do not want to create any content. I am specifically interested in [Fill in a specific topic — OR remove this line entirely to get a broad GenAI sweep across all categories].
 
-Please execute **Step 2 (Research Phase)** using your live web search tools on the provided URLs for the past 7-14 days. After researching, immediately provide a concise, categorized summary highlighting the 3-5 key takeaways.
+Please execute **Step 2 (Research Phase)** using your live web search tools on the provided URLs for the past 7-14 days. After researching, immediately provide a concise, categorized summary highlighting the 3-5 key takeaways. Then execute the **CRITICAL PIVOT STEP** defined in Step 3.
 ```
 
 ---
@@ -69,7 +69,7 @@ Act as my expert AI research assistant using the `genai_weekly_research_prompt.m
 Skip Steps 1-3. We are creating a **Medium Article**. 
 Please begin immediately at **Step 2 (Research Phase)**. Focus your research on [specific topic, e.g., latest open-source model releases or agentic frameworks]. 
 
-Once research is complete, execute **Step 4 (Idea Generation Phase)**. Give me 4-5 compelling article ideas focusing on "Cross-Pollination" or "Deep Structural Deconstruction." Wait for my selection before proceeding to Step 6.
+Once research is complete, execute **Step 4 (Idea Generation Phase)**. Give me 4-5 compelling article ideas focusing on "Cross-Pollination" or "Deep Structural Deconstruction." Wait for my selection before proceeding to Step 6. (If I already understand the topic, I'll say "skip the explanation" and you should jump straight to Step 7.)
 ```
 
 ---
@@ -84,7 +84,7 @@ Act as my expert AI research assistant using the `genai_weekly_research_prompt.m
 Skip Steps 1-3. We are creating a **LinkedIn Post**. 
 Please begin immediately at **Step 2 (Research Phase)**. Look for emerging trends around [specific topic, e.g., RAG optimization or prompt caching]. 
 
-Once research is complete, execute **Step 4 (Idea Generation Phase)**. Generate 5 short-form topics focusing on "Unconventional Solutions" or "Micro-Optimizations" that engineers face. Highlight quantifiable metrics. Wait for my selection before proceeding to Step 6.
+Once research is complete, execute **Step 4 (Idea Generation Phase)**. Generate 5 short-form topics focusing on "Unconventional Solutions" or "Micro-Optimizations" that engineers face. Highlight quantifiable metrics. Wait for my selection before proceeding to Step 6. (If I already understand the topic, I'll say "skip the explanation" and you should jump straight to Step 7.)
 ```
 
 ---
@@ -99,19 +99,37 @@ Act as my expert AI research assistant using the `genai_weekly_research_prompt.m
 Skip Steps 1-3. We are creating a **Twitter / X Thread**. 
 Please begin immediately at **Step 2 (Research Phase)**. Look for the latest developments regarding [specific topic/tool]. 
 
-Once research is complete, execute **Step 4 (Idea Generation Phase)**. Generate 5 bold, controversial, or highly-technical topics that challenge the current hype cycle. Wait for my selection before creating the 7-tweet thread in Step 7.
+Once research is complete, execute **Step 4 (Idea Generation Phase)**. Generate 5 bold, controversial, or highly-technical topics that challenge the current hype cycle. Wait for my selection before creating the 7-tweet thread in Step 7. (If I already understand the topic, I'll say "skip the explanation" and you should jump straight to Step 7.)
 ```
 
 ---
 
 ## 8. The "Study & Pivot" Routine
-**What it does:** Use this when you are just studying or browsing for your own personal engineering growth, but you want to leave the door open to writing an article if you stumble onto something genuinely cool. It runs an information-only briefing but explicitly triggers the new "Pivot" capability.
+**What it does:** Use this when you are just studying or browsing for your own personal engineering growth, but you want to leave the door open to writing an article if you stumble onto something genuinely cool. It runs an information-only briefing and explicitly triggers the **Critical Pivot Step**. **Tip:** Replace `[Insert Topic]` with your specific area of interest — OR remove the placeholder entirely to get a **broad sweep** of all GenAI developments this week.
 
 **The Prompt:**
 ```text
 Act as my expert AI research assistant using the `genai_weekly_research_prompt.md` workflow. 
 
-Today we are taking **Pathway B: Information Only**. I am just trying to study and understand the latest developments regarding [Insert Topic, e.g., memory management in local LLMs].
+Today we are taking **Pathway B: Information Only**. I am just trying to study and understand the latest developments regarding [Fill in your specific topic here — OR remove this line entirely for a broad sweep of all GenAI categories this week].
 
 Please execute **Step 2 (Research Phase)** using your live web browsing. Provide me with a categorized briefing of what you find. When you are done, execute the **CRITICAL PIVOT STEP** defined in Step 3. Ask me if any of it caught my eye, and be prepared to instantly shift gears into Pathway A (Content Creation) if I decide I want to write a piece based on your briefing.
+```
+
+---
+
+## 9. Revision & Iteration Mode
+**What it does:** Use this when you have already generated a piece of content in a previous session (or earlier in the same session) and want to iterate on it. Triggers Step 8 of the workflow — the revision loop — directly without redoing any research or idea generation.
+
+**The Prompt:**
+```text
+Act as my expert AI research assistant using the `genai_weekly_research_prompt.md` workflow.
+
+We are jumping directly to **Step 8 (Revision & Iteration Phase)**. Below is the content I have already generated that I want to refine:
+
+[Paste your existing LinkedIn post / Medium article / Twitter thread here]
+
+Here is what I want to change: [Describe your edit — e.g., "make the hook more punchy", "shorten the middle section", "add a concrete code example", "make the tone more casual"].
+
+Revise only the specified section. Label it clearly as "Revised [section name]:". Then ask me if there is anything else to adjust.
 ```
