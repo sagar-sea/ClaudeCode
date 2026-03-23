@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Prompt Caching: Effective vs Ineffective</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070711;
+    --surface: #0f0f1e;
+    --surface2: #161628;
+    --border: #1e1e38;
+    --purple: #7c3aed;
+    --purple-light: #a855f7;
+    --purple-glow: rgba(124, 58, 237, 0.3);
+    --cyan: #06b6d4;
+    --cyan-light: #22d3ee;
+    --cyan-glow: rgba(6, 182, 212, 0.3);
+    --red: #ef4444;
+    --red-glow: rgba(239, 68, 68, 0.25);
+    --green: #10b981;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #334155;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    overflow-x: hidden;
+  }
+
+  /* ─── Header ─── */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeDown 0.8s ease both;
+  }
+  .header .eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .header h1 {
+    font-size: clamp(22px, 4vw, 36px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 0%, var(--purple-light) 50%, var(--cyan-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .header p {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 400;
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ─── Split layout ─── */
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+    max-width: 1100px;
+  }
+
+  /* ─── Panel ─── */
+  .panel {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 32px 28px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .panel.bad::before  { background: linear-gradient(90deg, var(--red), #f97316); }
+  .panel.good::before { background: linear-gradient(90deg, var(--purple), var(--cyan)); }
+
+  .panel-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .panel-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .bad  .panel-icon { background: var(--red-glow); }
+  .good .panel-icon { background: var(--purple-glow); }
+  .panel-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .bad  .panel-title { color: var(--red); }
+  .good .panel-title { color: var(--purple-light); }
+  .panel-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ─── Timeline ─── */
+  .timeline {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .tl-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    position: relative;
+  }
+
+  /* vertical connector line */
+  .tl-row:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 32px;
+    width: 2px;
+    height: calc(100% + 4px);
+    background: var(--border);
+  }
+
+  .tl-dot-wrap {
+    flex-shrink: 0;
+    width: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 4px;
+  }
+  .tl-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: var(--bg);
+    z-index: 1;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .tl-content {
+    flex: 1;
+    padding-bottom: 28px;
+  }
+
+  .tl-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+  }
+
+  .tl-card {
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 1px solid;
+    position: relative;
+    overflow: hidden;
+  }
+  .tl-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    opacity: 0.06;
+  }
+
+  .tl-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tl-card-body {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ─── Badge / pill ─── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .badge-red    { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+  .badge-orange { background: rgba(249,115,22,0.15); color: #fdba74; border: 1px solid rgba(249,115,22,0.3); }
+  .badge-purple { background: rgba(168,85,247,0.15); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.3); }
+  .badge-cyan   { background: rgba(6,182,212,0.15); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
+  .badge-green  { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+
+  /* ─── Specific timeline card colors ─── */
+  /* BAD panel */
+  .card-write-bad {
+    border-color: rgba(249,115,22,0.35);
+    background: rgba(249,115,22,0.05);
+  }
+  .card-write-bad .tl-card-title { color: #fb923c; }
+  .card-write-bad .tl-dot { border-color: #fb923c; }
+
+  .card-gap {
+    border-color: var(--border);
+    background: var(--surface2);
+    border-style: dashed;
+  }
+  .card-gap .tl-card-title { color: var(--text-muted); }
+  .card-gap .tl-dot { border-color: var(--text-dim); }
+
+  .card-expired {
+    border-color: rgba(239,68,68,0.4);
+    background: rgba(239,68,68,0.06);
+  }
+  .card-expired .tl-card-title { color: #f87171; }
+  .card-expired .tl-dot { border-color: var(--red); background: rgba(239,68,68,0.15); }
+
+  .card-rewrite {
+    border-color: rgba(239,68,68,0.3);
+    background: rgba(239,68,68,0.05);
+  }
+  .card-rewrite .tl-card-title { color: #fca5a5; }
+  .card-rewrite .tl-dot { border-color: var(--red); }
+
+  /* GOOD panel */
+  .card-write-good {
+    border-color: rgba(124,58,237,0.4);
+    background: rgba(124,58,237,0.06);
+  }
+  .card-write-good .tl-card-title { color: var(--purple-light); }
+  .card-write-good .tl-dot { border-color: var(--purple); }
+
+  .card-hit {
+    border-color: rgba(6,182,212,0.35);
+    background: rgba(6,182,212,0.05);
+  }
+  .card-hit .tl-card-title { color: var(--cyan-light); }
+  .card-hit .tl-dot { border-color: var(--cyan); background: rgba(6,182,212,0.15); }
+
+  .card-reset {
+    border-color: rgba(16,185,129,0.35);
+    background: rgba(16,185,129,0.05);
+  }
+  .card-reset .tl-card-title { color: #34d399; }
+  .card-reset .tl-dot { border-color: var(--green); }
+
+  /* ─── Bar chart inside cards ─── */
+  .mini-bar-wrap {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .mini-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .mini-bar-label { width: 70px; flex-shrink: 0; }
+  .mini-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .mini-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transform-origin: left;
+    transform: scaleX(0);
+  }
+  .mini-bar-val { width: 38px; text-align: right; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+
+  /* ─── Progress / flow indicators ─── */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .flow-arrow {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  /* ─── Glowing pulse dot ─── */
+  .pulse {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .pulse-red    { background: var(--red);    box-shadow: 0 0 6px var(--red);    animation: blink 1.2s infinite; }
+  .pulse-orange { background: #f97316;       box-shadow: 0 0 6px #f97316;       animation: blink 1.4s infinite; }
+  .pulse-cyan   { background: var(--cyan);   box-shadow: 0 0 6px var(--cyan);   animation: blink 0.9s infinite; }
+  .pulse-green  { background: var(--green);  box-shadow: 0 0 6px var(--green);  animation: blink 1.1s infinite; }
+
+  /* ─── Bottom metric strip ─── */
+  .metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+    max-width: 1100px;
+    margin-top: 20px;
+  }
+  .metric-strip {
+    display: flex;
+    gap: 12px;
+  }
+  .metric-card {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    text-align: center;
+  }
+  .metric-val {
+    font-size: 24px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .metric-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* ─── Footer ─── */
+  .footer {
+    margin-top: 32px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    animation: fadeUp 1s ease 2.5s both;
+  }
+  .footer span {
+    color: var(--cyan);
+    font-weight: 600;
+  }
+
+  /* ─── Visual TTL ring ─── */
+  .ttl-ring-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 14px 0 4px;
+  }
+  .ttl-ring {
+    width: 68px; height: 68px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-size: 12px;
+  }
+  .ttl-ring svg {
+    position: absolute;
+    top: 0; left: 0;
+    transform: rotate(-90deg);
+  }
+  .ttl-ring .ttl-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    z-index: 1;
+  }
+  .ttl-ring .ttl-sub {
+    font-size: 8px;
+    color: var(--text-muted);
+    z-index: 1;
+  }
+
+  /* ─── Animations ─── */
+  @keyframes fadeDown  { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeUp    { from { opacity:0; transform:translateY(12px); }  to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
+  @keyframes slideIn   { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes blink     { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
+  @keyframes fillBar   { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+  @keyframes ttlSweep  { from { stroke-dashoffset: 201.06; } to { stroke-dashoffset: 0; } }
+  @keyframes ttlDrain  { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 201.06; } }
+  @keyframes shake     { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-4px); } 40%,80% { transform:translateX(4px); } }
+  @keyframes glow      { 0%,100% { box-shadow: 0 0 0px transparent; } 50% { box-shadow: 0 0 18px var(--cyan-glow); } }
+  @keyframes slideRight { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes popIn     { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+  @keyframes connectorGrow { from { transform:scaleY(0); transform-origin:top; } to { transform:scaleY(1); transform-origin:top; } }
+  @keyframes costTick  { 0%{opacity:0;transform:translateY(-6px)} 10%,90%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(6px)} }
+
+  /* staggered row entries */
+  .tl-row:nth-child(1) { animation: slideIn 0.5s ease 0.3s both; }
+  .tl-row:nth-child(2) { animation: slideIn 0.5s ease 0.65s both; }
+  .tl-row:nth-child(3) { animation: slideIn 0.5s ease 1.0s both; }
+  .tl-row:nth-child(4) { animation: slideIn 0.5s ease 1.35s both; }
+
+  .panel.bad  { animation: fadeIn 0.6s ease 0.1s both; }
+  .panel.good { animation: fadeIn 0.6s ease 0.25s both; }
+
+  /* bar fill animations */
+  .bar-fill-bad  { animation: fillBar 1.2s cubic-bezier(.4,0,.2,1) 1.6s both; }
+  .bar-fill-good { animation: fillBar 1.2s cubic-bezier(.4,0,.2,1) 1.8s both; }
+
+  /* TTL draining */
+  .ttl-drain { animation: ttlDrain 3s linear 1.2s both; }
+  .ttl-fill  { animation: ttlSweep 0.8s ease 1.8s both; }
+
+  /* expired shake */
+  .expired-shake { animation: shake 0.5s ease 1.8s both; }
+
+  /* cost pop animation for bad panel */
+  .cost-tick { animation: costTick 2s ease 2.2s both; }
+
+  /* metric cards */
+  .metric-card { animation: popIn 0.5s ease 2.0s both; }
+  .metric-card:nth-child(2) { animation-delay: 2.1s; }
+  .metric-card:nth-child(3) { animation-delay: 2.2s; }
+
+  /* second write bad highlight */
+  .second-write { animation: glow 1.5s ease 2.4s infinite; }
+
+  /* hit pulse flow */
+  .hit-flow .flow-step { animation: slideRight 0.35s ease both; }
+  .hit-flow .flow-step:nth-child(1) { animation-delay: 1.6s; }
+  .hit-flow .flow-step:nth-child(2) { animation-delay: 1.85s; }
+  .hit-flow .flow-step:nth-child(3) { animation-delay: 2.1s; }
+  .hit-flow .flow-step:nth-child(4) { animation-delay: 2.35s; }
+  .hit-flow .flow-step:nth-child(5) { animation-delay: 2.6s; }
+
+  /* connector line grow */
+  .tl-row:not(:last-child)::after { animation: connectorGrow 0.3s ease both; }
+  .tl-row:nth-child(1):not(:last-child)::after { animation-delay: 0.55s; }
+  .tl-row:nth-child(2):not(:last-child)::after { animation-delay: 0.9s; }
+  .tl-row:nth-child(3):not(:last-child)::after { animation-delay: 1.25s; }
+
+  /* repeating cost + warning for bad panel */
+  .cost-repeat {
+    animation: costTick 3s ease 2.5s infinite;
+  }
+
+  @media (max-width: 720px) {
+    .split, .metrics { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+  <div class="eyebrow">LLM API Engineering · Cost Optimization</div>
+  <h1>Prompt Caching: Effective vs. Ineffective</h1>
+  <p>Prompt caching charges a <strong style="color:#fb923c">+25% write premium</strong>. Cache misses silently compound costs. Here's what the difference looks like in practice.</p>
+</div>
+
+<!-- ── Split Panels ── -->
+<div class="split">
+
+  <!-- ════ BAD PANEL ════ -->
+  <div class="panel bad">
+    <div class="panel-label">
+      <div class="panel-icon">⚠️</div>
+      <div>
+        <div class="panel-title">Ineffective Caching</div>
+        <div class="panel-subtitle">Low-traffic · Dynamic prefixes · Short TTL misses</div>
+      </div>
+    </div>
+
+    <div class="timeline">
+
+      <!-- Event 1: Cache write -->
+      <div class="tl-row">
+        <div class="tl-dot-wrap"><div class="tl-dot card-write-bad" style="border-color:#fb923c"></div></div>
+        <div class="tl-content">
+          <div class="tl-time">⏱ t = 0:00 — Initial Request</div>
+          <div class="tl-card card-write-bad">
+            <div class="tl-card-title">
+              <span class="pulse pulse-orange"></span>
+              Cache Write: 5,000 tokens
+            </div>
+            <div class="tl-card-body">KV pairs computed &amp; stored in provider memory.</div>
+            <div class="mini-bar-wrap">
+              <div class="mini-bar-row">
+                <span class="mini-bar-label">Input cost</span>
+                <div class="mini-bar-bg"><div class="mini-bar-fill bar-fill-bad" style="width:60%; background:linear-gradient(90deg,#fb923c,#ef4444)"></div></div>
+                <span class="mini-bar-val" style="color:#fb923c">1.25×</span>
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <span class="badge badge-orange">+25% write premium applied</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event 2: Silence / gap -->
+      <div class="tl-row">
+        <div class="tl-dot-wrap"><div class="tl-dot card-gap" style="border-color:#334155"></div></div>
+        <div class="tl-content">
+          <div class="tl-time">⏱ t = 0:01 – 5:05 — Dead Silence</div>
+          <div class="tl-card card-gap">
+            <div class="tl-card-title" style="color:#64748b">
+              <span style="font-size:16px">🕳️</span>
+              No follow-up request
+            </div>
+            <div class="tl-card-body">Traffic is sparse. The 5-min sliding TTL ticks down with no cache reads to reset it.</div>
+            <div class="ttl-ring-wrap">
+              <div class="ttl-ring">
+                <svg width="68" height="68" viewBox="0 0 68 68">
+                  <circle cx="34" cy="34" r="32" fill="none" stroke="#1e1e38" stroke-width="5"/>
+                  <circle cx="34" cy="34" r="32" fill="none" stroke="#ef4444" stroke-width="5"
+                    stroke-dasharray="201.06" stroke-dashoffset="201.06"
+                    stroke-linecap="round" class="ttl-drain"/>
+                </svg>
+                <div class="ttl-val" style="color:#ef4444">5:00</div>
+                <div class="ttl-sub">TTL draining</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event 3: Expired -->
+      <div class="tl-row">
+        <div class="tl-dot-wrap"><div class="tl-dot card-expired" style="border-color:#ef4444; background:rgba(239,68,68,0.15)"></div></div>
+        <div class="tl-content">
+          <div class="tl-time">⏱ t = 5:05 — TTL Expired</div>
+          <div class="tl-card card-expired expired-shake">
+            <div class="tl-card-title">
+              <span style="font-size:16px">🗑️</span>
+              Cache Expired &amp; Wiped
+            </div>
+            <div class="tl-card-body">Provider flushes the KV pairs from GPU memory. 5,000 tokens of computed state → gone.</div>
+            <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+              <span class="badge badge-red">Cache Miss</span>
+              <span class="badge badge-red">Write premium → wasted</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event 4: Re-write -->
+      <div class="tl-row">
+        <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:#ef4444"></div></div>
+        <div class="tl-content" style="padding-bottom:0">
+          <div class="tl-time">⏱ t = 6:00 — Next Request Arrives</div>
+          <div class="tl-card card-rewrite second-write">
+            <div class="tl-card-title">
+              <span class="pulse pulse-red"></span>
+              Cache Re-Written: 5,000 tokens
+            </div>
+            <div class="tl-card-body">Full prefill recomputed. Full write premium charged again. Cycle repeats indefinitely.</div>
+            <div style="margin-top:10px">
+              <span class="badge badge-red cost-repeat">+25% cost · again · every cycle</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /timeline -->
+
+    <!-- mini metrics -->
+    <div style="display:flex; gap:10px; margin-top:24px;">
+      <div class="metric-card" style="border-color:rgba(239,68,68,0.25)">
+        <div class="metric-val" style="color:#f87171">0%</div>
+        <div class="metric-label">Cache Savings</div>
+      </div>
+      <div class="metric-card" style="border-color:rgba(249,115,22,0.25)">
+        <div class="metric-val" style="color:#fb923c">+25%</div>
+        <div class="metric-label">Extra Cost / Cycle</div>
+      </div>
+      <div class="metric-card" style="border-color:rgba(239,68,68,0.2)">
+        <div class="metric-val" style="color:#fca5a5">↑</div>
+        <div class="metric-label">Bill Trend</div>
+      </div>
+    </div>
+
+  </div><!-- /bad panel -->
+
+  <!-- ════ GOOD PANEL ════ -->
+  <div class="panel good">
+    <div class="panel-label">
+      <div class="panel-icon">✅</div>
+      <div>
+        <div class="panel-title">Effective Caching</div>
+        <div class="panel-subtitle">High-traffic · Static prefix first · Requests within TTL</div>
+      </div>
+    </div>
+
+    <div class="timeline">
+
+      <!-- Event 1: Initial write -->
+      <div class="tl-row">
+        <div class="tl-dot-wrap"><div class="tl-dot card-write-good" style="border-color:#a855f7"></div></div>
+        <div class="tl-content">
+          <div class="tl-time">⏱ t = 0:00 — Initial Request</div>
+          <div class="tl-card card-write-good">
+            <div class="tl-card-title">
+              <span class="pulse pulse-cyan"></span>
+              Cache Write: 5,000 tokens
+            </div>
+            <div class="tl-card-body">Static system prompt anchored at the top. KV pairs stored once. Write premium paid once.</div>
+            <div style="margin-top:10px">
+              <span class="badge badge-purple">One-time write cost</span>
+              <span class="badge badge-purple" style="margin-left:6px">Prefix locked ✓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event 2: Rapid hits -->
+      <div class="tl-row">
+        <div class="tl-dot-wrap"><div class="tl-dot card-hit" style="border-color:#06b6d4; background:rgba(6,182,212,0.15)"></div></div>
+        <div class="tl-content">
+          <div class="tl-time">⏱ t = 0:30 – 4:30 — Sequential Requests</div>
+          <div class="tl-card card-hit">
+            <div class="tl-card-title">
+              <span style="font-size:15px">⚡</span>
+              Cache Hits: 4 consecutive reads
+            </div>
+            <div class="tl-card-body">Each request reuses cached KV pairs. Provider charges 10% of normal input rate.</div>
+            <div class="flow-row hit-flow">
+              <div class="flow-step" style="background:rgba(6,182,212,0.12); color:var(--cyan-light)">REQ 1 ✓</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step" style="background:rgba(6,182,212,0.12); color:var(--cyan-light)">REQ 2 ✓</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step" style="background:rgba(6,182,212,0.12); color:var(--cyan-light)">REQ 3 ✓</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step" style="background:rgba(6,182,212,0.12); color:var(--cyan-light)">REQ 4 ✓</div>
+            </div>
+            <div class="mini-bar-wrap" style="margin-top:12px">
+              <div class="mini-bar-row">
+                <span class="mini-bar-label">Input cost</span>
+                <div class="mini-bar-bg"><div class="mini-bar-fill bar-fill-good" style="width:10%; background:linear-gradient(90deg,#7c3aed,#06b6d4)"></div></div>
+                <span class="mini-bar-val" style="color:#22d3ee">0.10×</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event 3: Window reset -->
+      <div class="tl-row">
+        <div class="tl-dot-wrap"><div class="tl-dot card-reset" style="border-color:#10b981"></div></div>
+        <div class="tl-content">
+          <div class="tl-time">⏱ t = 4:30 — Sliding Window Reset</div>
+          <div class="tl-card card-reset">
+            <div class="tl-card-title">
+              <span style="font-size:15px">🔄</span>
+              TTL Reset to 5:00
+            </div>
+            <div class="tl-card-body">Each successful cache read resets the 5-minute sliding window. Cache stays warm indefinitely in active systems.</div>
+            <div class="ttl-ring-wrap">
+              <div class="ttl-ring">
+                <svg width="68" height="68" viewBox="0 0 68 68">
+                  <circle cx="34" cy="34" r="32" fill="none" stroke="#1e1e38" stroke-width="5"/>
+                  <circle cx="34" cy="34" r="32" fill="none" stroke="#10b981" stroke-width="5"
+                    stroke-dasharray="201.06" stroke-dashoffset="201.06"
+                    stroke-linecap="round" class="ttl-fill"/>
+                </svg>
+                <div class="ttl-val" style="color:#10b981">5:00</div>
+                <div class="ttl-sub">Reset ✓</div>
+              </div>
+            </div>
+            <div style="margin-top:4px">
+              <span class="badge badge-green">Sliding Window Active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event 4: Sustained savings -->
+      <div class="tl-row">
+        <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:#22d3ee; background:rgba(6,182,212,0.15)"></div></div>
+        <div class="tl-content" style="padding-bottom:0">
+          <div class="tl-time">⏱ t = ongoing — Sustained Operation</div>
+          <div class="tl-card card-hit" style="border-color:rgba(6,182,212,0.5); background:rgba(6,182,212,0.07)">
+            <div class="tl-card-title">
+              <span class="pulse pulse-green"></span>
+              90% Cost Savings · Locked In
+            </div>
+            <div class="tl-card-body">High-volume workloads (agents, batch jobs, customer bots) maintain near-100% hit rate continuously.</div>
+            <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+              <span class="badge badge-cyan">90% input cost reduction</span>
+              <span class="badge badge-green">85% lower TTFT</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /timeline -->
+
+    <!-- mini metrics -->
+    <div style="display:flex; gap:10px; margin-top:24px;">
+      <div class="metric-card" style="border-color:rgba(16,185,129,0.25)">
+        <div class="metric-val" style="color:#34d399">90%</div>
+        <div class="metric-label">Cache Savings</div>
+      </div>
+      <div class="metric-card" style="border-color:rgba(6,182,212,0.25)">
+        <div class="metric-val" style="color:#22d3ee">85%</div>
+        <div class="metric-label">Lower TTFT</div>
+      </div>
+      <div class="metric-card" style="border-color:rgba(16,185,129,0.2)">
+        <div class="metric-val" style="color:#6ee7b7">↓</div>
+        <div class="metric-label">Bill Trend</div>
+      </div>
+    </div>
+
+  </div><!-- /good panel -->
+</div><!-- /split -->
+
+<!-- ── The Rule ── -->
+<div style="max-width:1100px; width:100%; margin-top:20px; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px 28px; display:flex; align-items:center; gap:20px; animation: fadeUp 0.6s ease 2.2s both;">
+  <div style="font-size:28px; flex-shrink:0">💡</div>
+  <div>
+    <div style="font-size:13px; font-weight:700; color:var(--cyan-light); margin-bottom:5px;">The Golden Rule of Prompt Caching</div>
+    <div style="font-size:12px; color:var(--text-muted); line-height:1.65;">
+      Only enable caching when you can <strong style="color:var(--text)">guarantee a follow-up request within the 5-minute sliding TTL</strong>. 
+      Place all static content (system prompt, instructions, few-shot examples) <strong style="color:var(--text)">at the exact top of the prefix</strong> — a single variable inserted before it breaks the entire prefix match and zeroes your hit rate.
+      Audit your <code style="background:var(--surface2); padding:1px 5px; border-radius:4px; color:var(--purple-light); font-family:'JetBrains Mono',monospace; font-size:11px">cached_tokens</code> value in every API response.
+    </div>
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<div class="footer">
+  <span>Sagar Rathkanthiwar</span> &nbsp;·&nbsp; Follow Sagar Rathkanthiwar &nbsp;·&nbsp; Repost to share with your network
+</div>
+
+</body>
+</html>
