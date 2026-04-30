@@ -15,6 +15,9 @@ import time
 import socket
 import os
 import sys
+import json
+import urllib.request
+import urllib.error
 
 
 class OllamaClaudeLauncher:
@@ -58,6 +61,132 @@ class OllamaClaudeLauncher:
         self.create_scrollable_ui()
         self.refresh_models()
         self.check_initial_status()
+
+    def get_ollama_base_url(self):
+        """Resolve Ollama base URL for Anthropic-compatible API."""
+        explicit = os.environ.get("ANTHROPIC_BASE_URL")
+        if explicit:
+            return explicit
+
+        host = os.environ.get("OLLAMA_HOST", "").strip()
+        if host:
+            if host.startswith("http://") or host.startswith("https://"):
+                return host
+            return f"http://{host}"
+
+        return "http://localhost:11434"
+
+    def build_claude_env(self):
+        """Build env vars needed for Claude Code -> Ollama compatibility."""
+        env = os.environ.copy()
+        env["ANTHROPIC_AUTH_TOKEN"] = "ollama"
+        env["ANTHROPIC_API_KEY"] = ""
+        env["ANTHROPIC_BASE_URL"] = self.get_ollama_base_url()
+        # Prevent thinking-only responses from some local models.
+        env["MAX_THINKING_TOKENS"] = "0"
+        return env
+
+    def ollama_api_post(self, path, payload, timeout=30):
+        """POST to Ollama API and return parsed JSON."""
+        base_url = self.get_ollama_base_url().rstrip("/")
+        url = f"{base_url}{path}"
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode("utf-8")
+            if not raw:
+                return {}
+            return json.loads(raw)
+
+    def ollama_api_get(self, path, timeout=30):
+        """GET from Ollama API and return parsed JSON."""
+        base_url = self.get_ollama_base_url().rstrip("/")
+        url = f"{base_url}{path}"
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode("utf-8")
+            if not raw:
+                return {}
+            return json.loads(raw)
+
+    def model_has_thinking_capability(self, model):
+        """Check whether a model advertises thinking capability."""
+        try:
+            info = self.ollama_api_post("/api/show", {"model": model}, timeout=20)
+            caps = info.get("capabilities", [])
+            return "thinking" in caps
+        except Exception as e:
+            self.log(f"Could not inspect model capabilities: {e}", "warning")
+            return False
+
+    def make_nothink_alias_model(self, model):
+        """Create a non-thinking alias model for Anthropic-compatible clients."""
+        alias_base = (
+            model.replace(":", "-")
+            .replace("/", "-")
+            .replace(".", "-")
+            .replace("_", "-")
+            + "-nothink"
+        )
+        alias_model = f"{alias_base}:latest"
+
+        try:
+            tags = self.ollama_api_get("/api/tags", timeout=20)
+            existing = {m.get("name", "") for m in tags.get("models", [])}
+            if alias_model in existing:
+                self.log(f"Using existing compatibility model: {alias_model}", "success")
+                return alias_model
+        except Exception as e:
+            self.log(f"Could not check existing models via API: {e}", "warning")
+
+        self.log(
+            f"Creating compatibility model {alias_model} (think=false default)...",
+            "warning",
+        )
+        result = self.ollama_api_post(
+            "/api/create",
+            {
+                "model": alias_base,
+                "from": model,
+                "parameters": {"think": "false"},
+                "stream": False,
+            },
+            timeout=180,
+        )
+        status = result.get("status", "")
+        if status and status.lower() == "success":
+            self.log(f"Created compatibility model: {alias_model}", "success")
+            return alias_model
+
+        raise RuntimeError(
+            f"Failed to create compatibility model for {model}. Response: {result}"
+        )
+
+    def get_claude_compatible_model(self, model):
+        """Return model to launch in Claude Code, with compatibility alias if needed."""
+        if self.model_type.get() != "local":
+            return model
+
+        if not self.model_has_thinking_capability(model):
+            return model
+
+        self.log(
+            f"Model {model} exposes thinking capability; enabling Claude compatibility mode.",
+            "warning",
+        )
+        try:
+            return self.make_nothink_alias_model(model)
+        except Exception as e:
+            self.log(
+                f"Compatibility alias creation failed, continuing with original model: {e}",
+                "error",
+            )
+            return model
 
     def find_ollama(self):
         """Find Ollama executable in common locations or PATH"""
@@ -514,15 +643,20 @@ class OllamaClaudeLauncher:
             if not os.path.exists(self.claude_path):
                 raise FileNotFoundError(f"Claude Code not found at {self.claude_path}")
 
-            self.log(f"Launching Claude Code with: {model}")
+            launch_model = self.get_claude_compatible_model(model)
+            claude_env = self.build_claude_env()
+            self.log(f"Launching Claude Code with: {launch_model}")
             self.log(f"Working directory: {claude_workdir}")
+            self.log(f"Using Ollama endpoint: {claude_env['ANTHROPIC_BASE_URL']}")
+            self.log("Applied Ollama compatibility env + thinking disabled", "warning")
             subprocess.Popen(
-                [self.claude_path, "--model", model],
+                [self.claude_path, "--model", launch_model, "--effort", "low"],
                 cwd=claude_workdir,
+                env=claude_env,
                 creationflags=subprocess.CREATE_NEW_CONSOLE
             )
             self.log("Claude Code launched!", "success")
-            messagebox.showinfo("Success", f"Claude Code launched with:\n{model}\n\nWorking directory:\n{claude_workdir}")
+            messagebox.showinfo("Success", f"Claude Code launched with:\n{launch_model}\n\nWorking directory:\n{claude_workdir}")
         except FileNotFoundError as e:
             self.log(f"Error: {e}", "error")
             messagebox.showerror("Error", f"Claude Code not found:\n{self.claude_path}\n\nPlease check the path in the script.")
