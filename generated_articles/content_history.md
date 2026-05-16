@@ -41,3 +41,4 @@ This file tracks all articles, posts, and content generated through the GenAI re
 | 2026-04-29 | LinkedIn Post | Intelligent Probing in RAG | intelligent_probing_in_rag_linkedin_2026-04-29.md |
 | 2026-05-03 | LinkedIn Post | Most Engineers Are Using LangChain and LangGraph Wrong | langchain_vs_langgraph_wrong_usage_linkedin_2026-05-03.md |
 | 2026-05-03 | LinkedIn Post | AI Agent Deletes Production Database: The 9-Second Catastrophe | pocketos_ai_database_deletion_linkedin_2026-05-03.md |
+| 2026-05-12 | LinkedIn Post | AWS Agent Registry: The App Store for Enterprise Agents | aws_agent_registry_kiro_linkedin_2026-05-12.md |
