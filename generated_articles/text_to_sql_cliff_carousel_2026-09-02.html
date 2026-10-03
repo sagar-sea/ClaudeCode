@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>The Text-to-SQL Cliff — Carousel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0B0E14; --ink2:#12161F; --line:#232A38;
+  --paper:#EEF2F7; --mute:#8B97AB;
+  --teal:#2DD4BF; --lime:#A3E635; --amber:#FBBF24; --coral:#FB7185; --violet:#8B7FF7;
+}
+*{box-sizing:border-box}
+html{background:#05070B}
+body{margin:0;font-family:'Space Grotesk',system-ui,sans-serif;color:var(--paper)}
+.toolbar{position:sticky;top:0;z-index:99;display:flex;gap:18px;align-items:center;justify-content:center;padding:14px;background:#0B0E14f2;border-bottom:1px solid var(--line);font-size:13px;color:var(--mute)}
+.toolbar button{border:0;border-radius:8px;padding:11px 20px;cursor:pointer;font:700 14px 'Space Grotesk';color:#06231F;background:linear-gradient(135deg,var(--teal),var(--lime));box-shadow:0 6px 24px #2dd4bf55}
+.slides{display:flex;flex-direction:column;align-items:center;gap:28px;padding:28px 0 60px}
+
+.slide{position:relative;width:1080px;height:1350px;overflow:hidden;isolation:isolate;
+  padding:96px 90px 104px;background:var(--ink);
+  page-break-after:always;break-after:page;box-shadow:0 24px 70px #000a}
+/* layered atmosphere */
+.slide:before{content:"";position:absolute;inset:0;z-index:-3;
+  background:
+   radial-gradient(760px 520px at 88% -8%, #2dd4bf24, transparent 62%),
+   radial-gradient(700px 620px at -12% 108%, #8b7ff726, transparent 60%),
+   linear-gradient(160deg,#0B0E14 0%,#10151E 52%,#0A0D13 100%)}
+.slide:after{content:"";position:absolute;inset:0;z-index:-2;opacity:.55;
+  background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(80% 70% at 50% 40%,#000 40%,transparent 100%);
+  -webkit-mask-image:radial-gradient(80% 70% at 50% 40%,#000 40%,transparent 100%)}
+.hair{position:absolute;left:0;right:0;top:0;height:5px;z-index:2;
+  background:linear-gradient(90deg,var(--teal),var(--lime) 34%,var(--amber) 66%,var(--coral))}
+
+/* type system */
+.eyebrow{display:flex;align-items:center;gap:14px;font:600 16px 'Space Grotesk';letter-spacing:.22em;text-transform:uppercase;color:var(--teal);margin:0 0 34px}
+.eyebrow s{display:block;width:52px;height:2px;background:var(--teal);opacity:.6;text-decoration:none}
+h1{margin:0;font:600 96px/0.98 'Space Grotesk';letter-spacing:-.035em}
+h2{margin:0;font:600 74px/1.02 'Space Grotesk';letter-spacing:-.03em}
+.serif{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-weight:400;letter-spacing:-.01em}
+.lead{font:400 31px/1.45 'Space Grotesk';color:#C6D0DE;max-width:800px}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.teal{color:var(--teal)}.lime{color:var(--lime)}.amber{color:var(--amber)}.coral{color:var(--coral)}.violet{color:var(--violet)}.mute{color:var(--mute)}
+.glow{text-shadow:0 0 46px currentColor}
+
+/* chrome */
+.badge{position:absolute;right:90px;top:92px;display:flex;align-items:center;gap:10px;
+  padding:10px 18px;border:1px solid var(--line);border-radius:999px;background:#ffffff0a;
+  font:600 14px 'JetBrains Mono';color:var(--mute);letter-spacing:.06em}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 12px var(--teal)}
+.foot{position:absolute;left:90px;right:90px;bottom:58px;display:flex;align-items:center;gap:20px;
+  font:600 15px 'JetBrains Mono';color:#5D6879;letter-spacing:.05em}
+.track{flex:1;height:3px;border-radius:3px;background:#1C2432;overflow:hidden}
+.track i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--lime))}
+
+/* cards */
+.card{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,#ffffff0e,#ffffff04);
+  box-shadow:0 20px 50px #0006, inset 0 1px 0 #ffffff14}
+.pill{display:inline-block;padding:9px 16px;border:1px solid var(--line);border-radius:999px;background:#ffffff08;font:600 17px 'JetBrains Mono';color:#AEBACB}
+
+/* ── S1 cover ── */
+.cover{padding-top:120px}
+.cover h1{font-size:104px;max-width:900px}
+.cover .kicker{margin:44px 0 0;font:400 58px/1.15 'Instrument Serif';font-style:italic;color:var(--coral)}
+.cover .lead{margin-top:46px;max-width:700px}
+.term{position:absolute;left:90px;right:90px;bottom:150px;border-radius:18px;overflow:hidden;border:1px solid var(--line);
+  background:#080B11;box-shadow:0 30px 70px #000b}
+.term header{display:flex;align-items:center;gap:9px;padding:16px 20px;background:#101620;border-bottom:1px solid var(--line);
+  font:600 15px 'JetBrains Mono';color:#6E7B8D}
+.term header b{width:11px;height:11px;border-radius:50%;display:inline-block}
+.term pre{margin:0;padding:30px 34px 34px;font:400 23px/1.75 'JetBrains Mono';color:#B7C4D6}
+.term .k{color:var(--violet)}.term .s{color:var(--lime)}
+.ok{position:absolute;right:34px;bottom:30px;font:700 20px 'JetBrains Mono';color:var(--coral);
+  padding:9px 16px;border:1px solid #fb718566;border-radius:8px;background:#fb71851a}
+
+/* ── S2 cliff chart ── */
+.chart{position:relative;height:600px;margin-top:56px;display:flex;align-items:flex-end;gap:120px;padding:0 60px 70px}
+.bar{position:relative;flex:1;border-radius:14px 14px 4px 4px}
+.bar.a{height:470px;background:linear-gradient(180deg,var(--teal),#0f766e);box-shadow:0 0 70px #2dd4bf55}
+.bar.b{height:196px;background:linear-gradient(180deg,var(--coral),#9f1239);box-shadow:0 0 70px #fb718555}
+.bar em{position:absolute;left:0;right:0;top:-84px;text-align:center;font:600 68px 'Space Grotesk';font-style:normal;letter-spacing:-.03em}
+.bar span{position:absolute;left:0;right:0;bottom:-58px;text-align:center;font:600 20px 'JetBrains Mono';color:#93A0B3}
+.chart:after{content:"";position:absolute;left:60px;right:60px;bottom:70px;height:1px;background:var(--line)}
+.cliffline{position:absolute;left:300px;right:290px;top:62px;height:268px;
+  border-top:2px dashed #FB718566;border-right:2px dashed #FB718566}
+.cliffline b{position:absolute;right:14px;top:-58px;padding:6px 16px;border-radius:999px;background:#fb71851f;border:1px solid #fb718559;font:700 34px 'Space Grotesk';color:var(--coral)}
+.dropnote{position:absolute;left:50%;top:150px;transform:translateX(-42%);font:400 40px 'Instrument Serif';font-style:italic;color:var(--coral)}
+
+/* ── S3 diagnosis ── */
+.diag{display:flex;flex-direction:column;justify-content:center;height:100%;padding-bottom:120px}
+.strike{position:relative;display:inline-block;font:600 76px/1.05 'Space Grotesk';color:#4C5768;letter-spacing:-.03em}
+.strike:after{content:"";position:absolute;left:-14px;right:-14px;top:52%;height:6px;border-radius:3px;background:var(--coral);box-shadow:0 0 26px var(--coral)}
+.reveal{margin-top:70px;font:600 80px/1.06 'Space Grotesk';letter-spacing:-.035em}
+
+/* ── S4 schema ── */
+.schema{display:grid;grid-template-columns:1.15fr .85fr;gap:36px;margin-top:52px}
+.tbl{padding:0;overflow:hidden;position:relative;height:640px}
+.tbl h4{margin:0;padding:20px 26px;background:#ffffff0d;border-bottom:1px solid var(--line);font:600 20px 'JetBrains Mono';color:var(--teal);letter-spacing:.04em}
+.tbl ul{list-style:none;margin:0;padding:14px 26px}
+.tbl li{padding:13px 0;border-bottom:1px solid #ffffff0a;font:400 22px 'JetBrains Mono';color:#B9C5D6;display:flex;justify-content:space-between}
+.tbl li i{font-style:normal;color:#57637A;font-size:18px}
+.fade{position:absolute;left:0;right:0;bottom:0;height:230px;background:linear-gradient(transparent,#0F131C 70%);
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:26px;font:600 22px 'JetBrains Mono';color:#6E7B8D}
+.notes{display:flex;flex-direction:column;gap:18px}
+.note{padding:26px 28px}
+.note b{display:block;font:600 44px 'Space Grotesk';letter-spacing:-.02em}
+.note p{margin:8px 0 0;font:400 21px/1.4 'Space Grotesk';color:#93A0B3}
+
+/* ── S5 join paths ── */
+.paths{margin-top:40px}
+.pathrow{display:flex;align-items:center;gap:26px;padding:28px 30px;margin-bottom:22px;border-radius:18px;border:1px solid var(--line);background:#ffffff07}
+.pathrow.good{border-color:#2dd4bf66;background:linear-gradient(90deg,#2dd4bf1f,transparent 80%);box-shadow:0 0 40px #2dd4bf1f}
+.pathrow .n{width:56px;height:56px;flex:none;border-radius:14px;display:grid;place-items:center;font:700 24px 'JetBrains Mono';background:#ffffff10;color:#93A0B3}
+.pathrow.good .n{background:var(--teal);color:#062E2A}
+.pathrow .q{flex:1;font:400 25px 'JetBrains Mono';color:#C3CEDD}
+.pathrow .v{font:600 21px 'Space Grotesk';color:var(--amber)}
+.pathrow.good .v{color:var(--teal)}
+
+/* ── S6 silent failure ── */
+.grid6{margin-top:56px;position:relative}
+.rowhead,.rowval{display:grid;grid-template-columns:1fr 1fr;padding:24px 32px;font:400 24px 'JetBrains Mono'}
+.rowhead{background:#ffffff0d;border-bottom:1px solid var(--line);color:var(--teal);letter-spacing:.05em}
+.rowval{border-bottom:1px solid #ffffff0a;color:#C3CEDD}
+.rowval b{font-weight:600}
+.stamp{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%) rotate(-9deg);
+  padding:24px 46px;border:5px solid var(--coral);border-radius:14px;
+  font:700 62px 'Space Grotesk';letter-spacing:-.02em;color:var(--coral);
+  background:#0B0E14e6;box-shadow:0 0 70px #fb71854d}
+
+/* ── S7 before/after ── */
+.ba{margin-top:44px;display:flex;flex-direction:column;gap:24px}
+.barow{padding:30px 38px}
+.barow h5{margin:0 0 24px;display:flex;align-items:baseline;gap:16px;font:600 38px 'Space Grotesk';letter-spacing:-.02em}
+.barow h5 u{text-decoration:none;font:600 24px 'JetBrains Mono';color:var(--lime)}
+.mrow{display:grid;grid-template-columns:250px 1fr 118px;align-items:center;gap:22px;margin-bottom:18px}
+.mrow:last-child{margin-bottom:0}
+.mrow label{font:600 19px 'Space Grotesk';color:#93A0B3}
+.mrow .track2{height:34px;border-radius:9px;background:#161D28;overflow:hidden;border:1px solid #202836}
+.mrow .track2 i{display:block;height:100%;border-radius:8px}
+.mrow .was{background:linear-gradient(90deg,#7C3E06,var(--amber))}
+.mrow .now{background:linear-gradient(90deg,var(--teal),var(--lime));box-shadow:0 0 34px #a3e63552}
+.mrow b{text-align:right;font:700 30px 'JetBrains Mono'}
+
+/* ── S8 architecture ── */
+.arch{display:flex;flex-direction:column;gap:30px;margin-top:44px}
+.flow{padding:30px 32px}
+.flow h5{margin:0 0 24px;display:flex;align-items:center;gap:14px;font:600 30px 'Space Grotesk'}
+.chain{display:flex;align-items:center;gap:14px;flex-wrap:nowrap}
+.node{padding:20px 20px;border-radius:14px;border:1px solid var(--line);background:#ffffff0a;
+  font:600 19px/1.25 'Space Grotesk';text-align:center;flex:1}
+.node.hot{border-color:#fb718566;background:#fb71851a;color:#FFD9DF}
+.node.cool{border-color:#2dd4bf66;background:#2dd4bf1a;color:#CFFBF3}
+.ar{font:700 26px 'JetBrains Mono';color:#4B5769;flex:none}
+.verdict{margin-top:22px;font:400 24px 'Space Grotesk'}
+
+/* ── S9 CTA ── */
+.cta{padding-top:150px}
+.cta h1{font-size:88px;max-width:880px}
+.cta .kicker{margin-top:44px;font:400 56px/1.16 'Instrument Serif';font-style:italic;color:var(--lime)}
+.ctabox{position:absolute;left:90px;right:90px;bottom:170px;padding:40px 44px;border-radius:20px;
+  border:1px solid #2dd4bf4d;background:linear-gradient(120deg,#2dd4bf1f,#8b7ff714);
+  font:600 40px/1.25 'Space Grotesk'}
+.tags{position:absolute;left:90px;bottom:112px;font:600 16px 'JetBrains Mono';color:#4E5A6C;letter-spacing:.08em}
+
+@media(max-width:1120px){
+ .slides{align-items:flex-start;padding:0 0 30px;gap:16px}
+ .slide{transform:scale(calc(100vw / 1080));transform-origin:top left;
+   margin-bottom:calc(1350px * (100vw / 1080 - 1));box-shadow:none}
+ .toolbar{justify-content:flex-start;min-width:1080px}
+}
+@media print{
+ @page{size:1080px 1350px;margin:0}
+ html,body{background:var(--ink)}
+ .toolbar{display:none}
+ .slides{display:block;padding:0;gap:0}
+ .slide{margin:0;box-shadow:none;page-break-after:always;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .slide:last-child{page-break-after:auto;break-after:auto}
+}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button onclick="window.print()">Print to PDF</button>
+  <span>File → Print → Destination: Save as PDF → Portrait → Margins: None → Background graphics: ON</span>
+</div>
+
+<main class="slides">
+
+<!-- 1 · COVER -->
+<section class="slide cover">
+  <div class="hair"></div>
+  <div class="badge"><span class="dot"></span> TEXT-TO-SQL · 2026</div>
+  <p class="eyebrow"><s></s>The accuracy cliff</p>
+  <h1>Your AI writes<br><span class="teal glow">perfect SQL.</span></h1>
+  <p class="kicker">It's still giving you<br>the wrong number.</p>
+  <p class="lead">Why the failure isn't syntax — and why a bigger model won't fix it.</p>
+
+  <div class="term">
+    <header><b style="background:#FB7185"></b><b style="background:#FBBF24"></b><b style="background:#A3E635"></b>&nbsp; generated_query.sql &nbsp;·&nbsp; ran in 1.4s</header>
+    <pre><span class="k">SELECT</span> region, <span class="k">SUM</span>(amt_ttl_c) <span class="k">AS</span> revenue
+<span class="k">FROM</span>   fct_orders <span class="k">o</span>
+<span class="k">JOIN</span>   dim_geo <span class="k">g</span> <span class="k">ON</span> o.cust_id_alt = g.cust_id
+<span class="k">WHERE</span>  flg_2 = <span class="s">'Y'</span>
+<span class="k">GROUP BY</span> 1;</pre>
+    <span class="ok">0 errors · wrong answer</span>
+  </div>
+
+  <div class="foot"><span>01</span><span class="track"><i style="width:11%"></i></span><span>09</span></div>
+</section>
+
+<!-- 2 · THE CLIFF -->
+<section class="slide">
+  <div class="hair"></div>
+  <div class="badge"><span class="dot"></span> SPIDER · SEP 2026</div>
+  <p class="eyebrow"><s></s>Same model. Different database.</p>
+  <h2>The cliff is <span class="coral">50 points</span> deep.</h2>
+
+  <div class="chart">
+    <div class="cliffline"><b>−52</b></div>
+    <div class="bar a"><em class="teal">91%</em><span>SPIDER 1.0 · academic schema</span></div>
+    <div class="bar b"><em class="coral">38%</em><span>SPIDER 2.0-LITE · real warehouse</span></div>
+  </div>
+
+  <p class="lead" style="margin-top:8px">Agents solve ~91% of clean textbook schemas. On real warehouses, today's leaderboards sit at <span class="coral">38–59%</span> depending on the split. <span class="mute mono" style="font-size:22px">Snow 59.05% · dbt 39.71% · Lite 37.84%</span></p>
+
+  <div class="card" style="margin-top:44px;padding:32px 36px;border-color:#fb718540;background:linear-gradient(120deg,#fb71851a,transparent 78%)">
+    <p style="margin:0;font:600 30px/1.34 'Space Grotesk'">Nothing about the model changed between those two bars. <span class="coral">Only the database did.</span></p>
+  </div>
+  <div class="foot"><span>02</span><span class="track"><i style="width:22%"></i></span><span>09</span></div>
+</section>
+
+<!-- 3 · WRONG DIAGNOSIS -->
+<section class="slide">
+  <div class="hair"></div>
+  <div class="badge"><span class="dot"></span> THE MISREAD</div>
+  <div class="diag">
+    <p class="eyebrow"><s></s>What everyone assumes</p>
+    <span class="strike">"The model can't<br>write good SQL."</span>
+    <p class="reveal">It writes <span class="lime glow">flawless</span> SQL.<br><span class="serif" style="font-size:84px">That's the problem.</span></p>
+    <p class="lead" style="margin-top:64px">Syntax is solved. Nothing in the query looks wrong — which is exactly why nobody checks it.</p>
+  </div>
+  <div class="foot"><span>03</span><span class="track"><i style="width:33%"></i></span><span>09</span></div>
+</section>
+
+<!-- 4 · REAL WAREHOUSE -->
+<section class="slide">
+  <div class="hair"></div>
+  <div class="badge"><span class="dot"></span> ~800 COLUMNS</div>
+  <p class="eyebrow"><s></s>What a real schema looks like</p>
+  <h2>Nobody documented<br>any of this.</h2>
+
+  <div class="schema">
+    <div class="card tbl">
+      <h4>fct_orders_v3</h4>
+      <ul>
+        <li>amt_ttl_c <i>numeric</i></li>
+        <li>amt_ttl_g <i>numeric</i></li>
+        <li>flg_2 <i>char(1)</i></li>
+        <li>dt_eff <i>date</i></li>
+        <li>dt_eff_utc <i>timestamp</i></li>
+        <li>cust_id_alt <i>varchar</i></li>
+        <li>cust_id_legacy <i>varchar</i></li>
+        <li>rgn_cd_x <i>varchar</i></li>
+      </ul>
+      <div class="fade">+ 792 more columns</div>
+    </div>
+    <div class="notes">
+      <div class="card note"><b class="amber">800</b><p>columns per database on average. Some over 1,000.</p></div>
+      <div class="card note"><b class="violet">3</b><p>plausible join paths. One is correct.</p></div>
+      <div class="card note"><b class="coral">0</b><p>of your business definitions live in the schema. They live in a Confluence page.</p></div>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:48px">The model isn't guessing at syntax. It's guessing at <span class="teal">meaning</span> — from column names that carry none.</p>
+  <div style="margin-top:34px"><span class="pill">undocumented columns</span> <span class="pill">ambiguous joins</span> <span class="pill">dialect quirks</span> <span class="pill">governance rules</span></div>
+  <div class="foot"><span>04</span><span class="track"><i style="width:44%"></i></span><span>09</span></div>
+</section>
+
+<!-- 5 · JOIN PATHS -->
+<section class="slide">
+  <div class="hair"></div>
+  <div class="badge"><span class="dot"></span> AMBIGUITY</div>
+  <p class="eyebrow"><s></s>"Show me revenue by region"</p>
+  <h2>All three run.<br><span class="amber">One is right.</span></h2>
+
+  <div class="paths">
+    <div class="pathrow"><span class="n">A</span><span class="q">orders → geo → SUM(amt_ttl_c)</span><span class="v">$4.18M ?</span></div>
+    <div class="pathrow"><span class="n">B</span><span class="q">orders → items → geo → SUM(line_amt)</span><span class="v">$4.61M ?</span></div>
+    <div class="pathrow good"><span class="n">C</span><span class="q">orders → geo → SUM(amt_ttl_g) net of returns</span><span class="v">$3.92M ✓</span></div>
+  </div>
+
+  <p class="lead" style="margin-top:44px">The model doesn't fail at <span class="serif" style="font-size:34px">writing</span> SQL. It fails at knowing <span class="teal">which</span> SQL your business calls correct — and no error message marks the difference.</p>
+
+  <div class="card" style="margin-top:38px;padding:30px 34px;border-color:#fbbf2440;background:linear-gradient(120deg,#fbbf241a,transparent 78%)">
+    <p style="margin:0;font:600 30px/1.32 'Space Grotesk'">Pick the wrong one and revenue is off by <span class="amber">$690,000</span> — with a query that looks textbook-clean.</p>
+  </div>
+  <div class="foot"><span>05</span><span class="track"><i style="width:55%"></i></span><span>09</span></div>
+</section>
+
+<!-- 6 · SILENT FAILURE -->
+<section class="slide">
+  <div class="hair"></div>
+  <div class="badge"><span class="dot"></span> FAILURE MODE</div>
+  <p class="eyebrow"><s></s>What lands in the dashboard</p>
+  <h2>It doesn't crash.<br>It <span class="coral">answers.</span></h2>
+
+  <div class="card grid6">
+    <div class="rowhead"><span>REGION</span><span>REVENUE</span></div>
+    <div class="rowval"><span>North America</span><b>$4,182,900</b></div>
+    <div class="rowval"><span>EMEA</span><b>$2,940,118</b></div>
+    <div class="rowval"><span>APAC</span><b>$1,708,442</b></div>
+    <div class="rowval" style="border:0"><span>LATAM</span><b>$611,205</b></div>
+    <div class="stamp">PLAUSIBLE.<br>WRONG.</div>
+  </div>
+
+  <p class="lead" style="margin-top:52px">A crash you notice in seconds. A confidently wrong number ships to a board deck and lives for a quarter.</p>
+
+  <div class="foot"><span>06</span><span class="track"><i style="width:66%"></i></span><span>09</span></div>
+</section>
+
+<!-- 7 · THE FIX -->
+<section class="slide">
+  <div class="hair"></div>
+  <div class="badge"><span class="dot"></span> TWO BENCHMARKS</div>
+  <p class="eyebrow"><s></s>Same models. Add structure.</p>
+  <h2>Not a bigger model.<br><span class="lime glow">A semantic layer.</span></h2>
+
+  <div class="ba">
+    <div class="card barow">
+      <h5>dbt <u>11 questions · vendor-run</u></h5>
+      <div class="mrow"><label>Raw text-to-SQL</label><div class="track2"><i class="was" style="width:90%"></i></div><b class="amber">90.0%</b></div>
+      <div class="mrow"><label>Semantic layer</label><div class="track2"><i class="now" style="width:98.2%"></i></div><b class="lime">98.2%</b></div>
+    </div>
+    <div class="card barow">
+      <h5>Cube <u>100 questions · 3 frontier models</u></h5>
+      <div class="mrow"><label>Raw text-to-SQL</label><div class="track2"><i class="was" style="width:49%"></i></div><b class="amber">~49%</b></div>
+      <div class="mrow"><label>Semantic layer</label><div class="track2"><i class="now" style="width:68%"></i></div><b class="lime">~68%</b></div>
+    </div>
+  </div>
+
+  <p class="lead" style="margin-top:36px">They disagree on the ceiling. They agree on the direction — and on this: <span class="lime">which model you use matters less than whether it has a semantic layer.</span></p>
+
+  <div class="card" style="margin-top:30px;padding:26px 34px;border-color:#a3e63540;background:linear-gradient(120deg,#a3e6351a,transparent 78%)">
+    <p style="margin:0;font:600 28px/1.3 'Space Grotesk'">The structure did the work — <span class="lime">not the model.</span></p>
+  </div>
+  <div class="foot"><span>07</span><span class="track"><i style="width:77%"></i></span><span>09</span></div>
+</section>
+
+<!-- 8 · WHY IT WORKS -->
+<section class="slide">
+  <div class="hair"></div>
+  <div class="badge"><span class="dot"></span> MECHANISM</div>
+  <p class="eyebrow"><s></s>Why the numbers move</p>
+  <h2>The error becomes<br><span class="teal">impossible</span>, not rarer.</h2>
+
+  <div class="arch">
+    <div class="card flow">
+      <h5><span class="coral">✕</span> Text-to-SQL</h5>
+      <div class="chain">
+        <span class="node">AI</span><span class="ar">→</span>
+        <span class="node hot">invents joins<br>+ aggregations</span><span class="ar">→</span>
+        <span class="node">warehouse</span><span class="ar">→</span>
+        <span class="node hot">a number</span>
+      </div>
+      <p class="verdict coral">Every run can pick a different wrong path.</p>
+    </div>
+    <div class="card flow">
+      <h5><span class="teal">✓</span> Semantic layer</h5>
+      <div class="chain">
+        <span class="node">AI</span><span class="ar">→</span>
+        <span class="node cool">picks metric<br>+ dimension</span><span class="ar">→</span>
+        <span class="node cool">layer compiles<br>the SQL</span><span class="ar">→</span>
+        <span class="node">warehouse</span>
+      </div>
+      <p class="verdict teal">The model never writes a join. Deterministic, every run.</p>
+    </div>
+  </div>
+
+  <div class="foot"><span>08</span><span class="track"><i style="width:88%"></i></span><span>09</span></div>
+</section>
+
+<!-- 9 · CTA -->
+<section class="slide cta">
+  <div class="hair"></div>
+  <div class="badge"><span class="dot"></span> THE TAKEAWAY</div>
+  <p class="eyebrow"><s></s>Generalizes far beyond SQL</p>
+  <h1>When AI keeps getting it <span class="coral">subtly wrong</span>, don't reach for a bigger model.</h1>
+  <p class="kicker">Narrow what the model<br>is allowed to decide.</p>
+  <p class="lead" style="margin-top:52px">Define the metric once. Let the AI choose from it.</p>
+
+  <div class="ctabox">Text-to-SQL or semantic layer —<br>which is your team running? <span class="lime">👇</span></div>
+  <p class="tags">#SQL · #DataEngineering · #SemanticLayer · #AIEngineering · #dbt</p>
+  <div class="foot"><span>09</span><span class="track"><i style="width:100%"></i></span><span>09</span></div>
+</section>
+
+</main>
+</body>
+</html>

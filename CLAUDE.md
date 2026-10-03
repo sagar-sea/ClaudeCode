@@ -4,131 +4,123 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repository contains a collection of tools and documentation for working with Large Language Models (LLMs), particularly focusing on:
+**ClaudeCode** is a GenAI development workspace focused on AI-assisted content creation, research, and automation. The core system is an **8-step article generation workflow** that combines live web research with structured content creation for multiple formats (Medium articles, LinkedIn posts, Twitter/X threads, learning documents).
 
-- **Ollama Integration**: A GUI launcher for managing Ollama models and launching Claude Code
-- **Excel Automation**: Scripts for creating and analyzing Excel files with sample data
-- **LLM Documentation**: Comprehensive guides on selecting and implementing LLMs
+## Architecture & Key Components
 
-## Key Components
+### 1. GenAI Article Generation System
+The heart of this project — a prompt-based workflow that lives in `GenAI_Articles/`:
+- **Master Workflow**: `genai_weekly_research_prompt.md` — 8-step instruction set for AI assistants
+- **Quick-Start Prompts**: `article_generation_prompts.md` — 7 pre-built starter templates for different session types
+- **Optimized Variants**: Several prompt versions optimized for specific AI models (Claude, ChatGPT)
+- **Credit Guides**: `CREDIT_OPTIMIZATION_GUIDE.md` and `QUICK_REFERENCE_CREDIT_OPTIMIZATION.md` for managing API costs
 
-### Ollama Claude Launcher (`ollama_claude_launcher.py`)
+**Two Pathways**:
+- **Pathway A** (Content Creation): Generates publishable content (Medium, LinkedIn, Twitter, Learning Docs)
+- **Pathway B** (Information Briefing): Weekly GenAI development briefing, with ability to pivot to content creation mid-session
 
-A Tkinter-based GUI application that:
-- Manages Ollama server lifecycle (start/stop)
-- Lists available local and cloud models
-- Launches Claude Code with selected models
-- Provides logging and status monitoring
+**Key Design**: The workflow handles 23 edge cases including unfilled topics, mid-session pathway changes, sparse news weeks, and inaccessible sources. It's designed to be stateless — can skip steps, iterate freely, and doesn't loop back.
 
-**Key Features:**
-- Dark theme UI with scrollable interface
-- Real-time server status monitoring
-- Support for both local Ollama models and predefined cloud models
-- Activity logging with timestamps
+### 2. Research Configuration (`config.json`)
+Defines research parameters and sources:
+- `article_word_count`: Target output length (1400)
+- `research_depth`: Research iteration count (5)
+- `cache_duration_hours`: Caching window (24)
+- `sources`: 6+ curated sources (Anthropic, Google AI, OpenAI, DeepSeek, Medium, TLDR)
 
-### Enhanced Ollama Claude Launcher (`ollama_claude_launcher_enhanced.py`)
+The workflow uses **live web research** across 20+ sources including company blogs, AI research aggregators (The Rundown, TLDR AI, Ben's Bites), engineering communities (Hacker News, r/MachineLearning), and expert blogs (Pragmatic Engineer, Chip Huyen).
 
-An improved version of the launcher with additional features:
-- Better error handling and logging
-- Model information viewer
-- Claude Code version checker
-- Enhanced UI with utility buttons
-- Color-coded log messages
+### 3. Article Output System
+- **Output Directory**: `generated_articles/` — Contains all generated content (markdown files with metadata like `_linkedin_2026-05-15` in filename)
+- **Content History**: `generated_articles/content_history.md` — Tracks all created content for deduplication and reference
 
-**Common Commands:**
-- Run original launcher: `python ollama_claude_launcher.py`
-- Run enhanced launcher: `python ollama_claude_launcher_enhanced.py`
-- Batch files: `ollama_claude_launcher.bat` or `ollama_claude_launcher_enhanced.bat`
-- Create desktop shortcut: `cscript //nologo create_shortcut.vbs`
+### 4. Supporting Systems
+- **Ollama Launcher** (`ollama_claude_launcher_enhanced.py`): Automated management of local Ollama server + Claude CLI
+- **MCP Web Search Server** (`web-search-mcp-server/`): Node.js-based Model Context Protocol server for web search capabilities
+- **Excel Utilities** (`add_analysis.py`, `add_pivot_table.py`, etc.): Data analysis and Excel automation helpers
+- **Learning Reference** (`GenAI_Learning_Reference/`): Interactive HTML guide covering AI/ML concepts
 
-### Excel Automation Scripts
+## How to Work with This Repository
 
-**create_excel.py**: Creates a sample Excel file with names data and concatenation formulas
-**add_pivot_table.py**: Adds basic pivot table functionality to the Excel file
-**add_analysis_fixed.py**: Performs data analysis with pandas and adds multiple analysis sheets
+### Article Generation Workflow
+This is a **prompt-driven, human-in-the-loop** system — not automated:
 
-**Dependencies:**
-- `openpyxl` for Excel file manipulation
-- `pandas` for data analysis
+1. **Start a Session**: Open one of the ready-to-use prompts from `article_generation_prompts.md` in Claude or your preferred AI assistant
+2. **Pick Your Pathway**:
+   - Use **Interactive Starter** if you're unsure of your goal
+   - Use **Direct-to-Content** if you know exactly what you want (Medium article, LinkedIn post, etc.)
+   - Use **Weekly Briefing** for information-only sessions
+3. **Follow the 8 Steps**: The master prompt in `genai_weekly_research_prompt.md` guides you through research → idea generation → selection → writing → revision
+4. **Iterate Freely**: You can skip steps, request revisions, pivot pathways mid-session
+5. **Save Output**: Generated content is meant to be saved to `generated_articles/` with naming convention `<topic>_<platform>_<date>.md`
+6. **Track in History**: Update `generated_articles/content_history.md` to prevent duplicate topic coverage
 
-**Usage:** Run scripts sequentially to build comprehensive Excel analysis:
+### Key Workflows by Task
+- **Create a LinkedIn Post**: Use `article_generation_prompts.md` → "Instant LinkedIn Post Generator"
+- **Create a Medium Article**: Use → "Instant Medium Article Generator"  
+- **Weekly Research Brief**: Use → "Weekly Briefing" (Pathway B)
+- **Production Postmortem Article**: Use → "Deep-Dive Failure Analysis" (contrarian edge cases)
+- **Stay Current Without Publishing**: Use → "Weekly Briefing" (Pathway B)
+
+### Development Commands
+
+**Python Dependencies**:
 ```bash
-python create_excel.py
-python add_pivot_table.py
-python add_analysis_fixed.py
+pip install -r requirements.txt
 ```
 
-## Environment and Permissions
+**MCP Server Setup**:
+```bash
+cd web-search-mcp-server
+npm install
+```
 
-**Claude Code Settings**: Permissions are configured in `.claude/settings.local.json` allowing:
-- Execution of Python scripts with Excel dependencies
-- Creation of desktop shortcuts
-- Ollama server management
+**Run Ollama Launcher** (for local AI development):
+```bash
+python ollama_claude_launcher_enhanced.py
+# Or via batch file: ollama_claude_launcher_enhanced.bat
+```
 
-**Working Directory**: Defaults to `%USERPROFILE%\ClaudeCode`
+**Common Ollama Commands** (see TROUBLESHOOTING.md for details):
+```bash
+ollama list                    # List installed models
+ollama pull model_name         # Download a model
+ollama rm model_name          # Remove a model
+```
 
-**Claude Path**: Configured as `%USERPROFILE%\.local\bin\claude.exe`
+## Important Context for Claude
 
-## Setup and Troubleshooting
+### When Working on Article Generation
+- The workflow is **not code-based** — it's a series of structured prompts in markdown files
+- The 8 steps have a specific order and rationale (research → ideas → selection → writing ensures quality)
+- Edge cases are explicitly documented (unfilled topics, pathway changes, sparse news weeks) — follow them
+- Output should be saved with `_<platform>_<date>` naming convention to `generated_articles/`
+- Check `content_history.md` before suggesting topics to avoid duplicates
 
-### PATH Configuration
-Claude Code should be accessible via the command line. If not:
-1. Run `setup_claude_path.ps1` to add Claude Code to your PATH
-2. Restart your terminal/command prompt
-3. Verify with `claude --version`
+### When Modifying Prompts
+- The workflow handles 23 edge cases explicitly — don't remove or simplify them
+- Both Pathway A (content) and Pathway B (briefing) branches must be present and clear
+- The "Critical Pivot Step" at the end of Pathway B (ability to switch to content creation) is load-bearing
+- Optimized variants exist for Claude, ChatGPT, etc. — preserve these as separate files
 
-### Common Issues
-See `TROUBLESHOOTING.md` for detailed solutions to common problems:
-- Claude Code not found
-- Ollama server won't start
-- Model loading issues
-- Image generation errors
+### When Adding Content Types
+- The current 4 formats are: Medium articles (~1200–1500 words), LinkedIn posts (~150–250 words), Twitter/X threads (5–7 tweets), and Learning Documents (deep-dive reference)
+- New formats should include: word count/length target, structure/sections, tone, and example output format
 
-### Testing Your Setup
-Run `test_setup.bat` to verify:
-- Ollama server status
-- Claude Code accessibility
-- Available models
+### Configuration Notes
+- `config.json` drives research depth and source selection — check it before expanding research sources
+- `cache_duration_hours` and `retry_attempts` control API efficiency and resilience
+- Research sources must be accessible and regularly updated (some may drift over time)
 
-## Architecture Notes
+## File Organization Notes
+- `GenAI_Articles/`: Master prompts, edge-case guides, credit optimization guides
+- `generated_articles/`: Output only — don't edit manually (track changes in version control instead)
+- Root-level Python scripts: Utility scripts and launchers (not part of core workflow)
+- `GenAI_Learning_Reference/`: Self-contained HTML reference guide
+- `web-search-mcp-server/`: Separate Node.js project
 
-### LLM Selection Framework
-The repository includes comprehensive guides (`how-to-choose-best-llm.md`, `llm-selection-blog-post.md`, `technical-llm-selection-guide.md`) covering:
-- Local vs cloud model trade-offs
-- Performance metrics and resource requirements
-- Integration patterns and deployment strategies
-- Cost optimization and security considerations
-
-### Code Patterns
-- **GUI Applications**: Uses Tkinter with modern dark theme styling
-- **Excel Processing**: Combines openpyxl for basic operations with pandas for analysis
-- **Subprocess Management**: Robust handling of Ollama processes and Claude Code launches
-- **Error Handling**: Comprehensive exception handling with user-friendly messages
-
-## Development Notes
-
-- The Excel scripts demonstrate progressive enhancement of data files
-- The launcher supports both interactive development and automated workflows
-- All scripts include proper error handling and status feedback
-- Desktop shortcuts can be created for quick access to the launcher
-
-## Model Support
-
-**Local Models**: Automatically detected via `ollama list` command
-**Cloud Models**: Predefined list including qwen3-coder, llama3.1, codellama, deepseek-coder
-
-## Model Recommendations
-
-### For Coding
-- qwen3-coder:30b (already installed)
-- deepseek-r1:8b (lightweight option)
-
-### For General Purpose
-- llama3.1:8b (balanced performance)
-- phi3 (fast and efficient)
-
-### For Lightweight Tasks
-- gemma2 (small and fast)
-- mistral (good balance of size and capability)
-
-Note: Avoid models with "mlx" tags unless using Apple Silicon Macs, as they require specific hardware support.
+## See Also
+- `TROUBLESHOOTING.md` — Common issues with Ollama, Claude CLI, and model selection
+- `README.md` — High-level project overview and features
+- `GenAI_Articles/GENAI_RESEARCH_README.md` — Detailed workflow guide
+- `GenAI_Articles/CREDIT_OPTIMIZATION_GUIDE.md` — Cost management for API calls

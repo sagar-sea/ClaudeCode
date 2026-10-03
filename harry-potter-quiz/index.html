@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Hogwarts Examination — Harry Potter Book Quiz</title>
+<style>
+/* ============================================================
+   THEME TOKENS
+   ============================================================ */
+:root{
+  --parchment:#f3e7cf; --ink:#2b2118; --ink-soft:#5b4a35;
+  --bg:#f7efdd; --panel:#fffaf0; --line:#d8c49a;
+  --gold:#b8912f; --gold-bright:#d4af37;
+  --gryff:#7f0909; --slyth:#1a472a; --raven:#0e1a40; --huff:#ecb939;
+  --good:#1e6b3a; --bad:#8d1a1a;
+  --shadow:0 6px 24px rgba(60,40,10,.18);
+  --radius:14px;
+  --serif:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --sans:"Segoe UI",system-ui,-apple-system,sans-serif;
+}
+[data-theme="dark"]{
+  --parchment:#1d1a22; --ink:#efe6d4; --ink-soft:#b7a98e;
+  --bg:#14121a; --panel:#211d29; --line:#3d3550;
+  --gold:#d4af37; --gold-bright:#f0d475;
+  --good:#4ade80; --bad:#f87171;
+  --shadow:0 6px 28px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at top,rgba(184,145,47,.12),transparent 60%);
+  color:var(--ink); font-family:var(--sans); line-height:1.55;
+  min-height:100vh; padding:24px 16px 64px;
+}
+.wrap{max-width:780px;margin:0 auto}
+
+/* ---------- header ---------- */
+header{text-align:center;margin-bottom:22px;position:relative}
+h1{
+  font-family:var(--serif); font-size:clamp(1.7rem,5vw,2.6rem);
+  margin:0 0 4px; letter-spacing:.5px;
+  color:var(--gold-bright);
+  text-shadow:0 2px 0 rgba(0,0,0,.25);
+}
+.tagline{margin:0;color:var(--ink-soft);font-style:italic;font-size:.95rem}
+#themeToggle{
+  position:absolute;top:0;right:0;background:transparent;border:1px solid var(--line);
+  color:var(--ink);border-radius:999px;width:38px;height:38px;cursor:pointer;font-size:1.05rem;
+}
+#themeToggle:hover{border-color:var(--gold)}
+
+/* ---------- panels ---------- */
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:22px; margin-bottom:18px;
+}
+.card h2{font-family:var(--serif);margin:0 0 12px;font-size:1.25rem;color:var(--gold)}
+.card h3{font-family:var(--serif);margin:18px 0 8px;font-size:1.05rem}
+.hidden{display:none !important}
+
+/* ---------- form controls ---------- */
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+label.fld{display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--ink-soft);font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+select,input[type=number]{
+  font:inherit;padding:9px 10px;border-radius:9px;border:1px solid var(--line);
+  background:var(--parchment);color:var(--ink);
+}
+select:focus-visible,input:focus-visible,button:focus-visible,.opt:focus-visible{
+  outline:3px solid var(--gold-bright);outline-offset:2px;
+}
+.checks{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px}
+.checks label{display:flex;align-items:center;gap:7px;font-size:.9rem;cursor:pointer}
+.checks input{width:17px;height:17px;accent-color:var(--gold)}
+
+/* ---------- buttons ---------- */
+button{font:inherit;cursor:pointer}
+.btn{
+  background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+  color:#231a06;border:none;border-radius:10px;padding:12px 22px;
+  font-weight:700;letter-spacing:.03em;box-shadow:0 3px 0 rgba(0,0,0,.25);
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn.ghost:hover{border-color:var(--gold);filter:none}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ---------- quiz ---------- */
+.qmeta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:.82rem;color:var(--ink-soft)}
+.bar{height:7px;background:var(--parchment);border-radius:99px;overflow:hidden;margin:10px 0 18px;border:1px solid var(--line)}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width .35s ease}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tag{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--ink-soft)}
+.tag.easy{color:var(--good);border-color:currentColor}
+.tag.medium{color:var(--gold);border-color:currentColor}
+.tag.hard{color:var(--bad);border-color:currentColor}
+.qtext{font-family:var(--serif);font-size:clamp(1.1rem,2.6vw,1.35rem);margin:0 0 18px}
+.opts{display:grid;gap:10px;list-style:none;padding:0;margin:0}
+.opt{
+  display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;
+  background:var(--parchment);border:1px solid var(--line);border-radius:11px;
+  padding:13px 15px;color:var(--ink);transition:transform .12s,border-color .12s,background .2s;
+}
+.opt:hover:not([disabled]){border-color:var(--gold);transform:translateX(3px)}
+.opt .key{
+  flex:0 0 25px;height:25px;border-radius:6px;display:grid;place-items:center;
+  font-size:.8rem;font-weight:700;background:var(--panel);border:1px solid var(--line);
+}
+.opt.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 16%,var(--parchment));animation:pop .3s ease}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 16%,var(--parchment))}
+.opt.chosen{font-weight:600}
+@keyframes pop{0%{transform:scale(.98)}60%{transform:scale(1.02)}100%{transform:scale(1)}}
+.feedback{margin-top:16px;padding:13px 15px;border-radius:11px;border-left:4px solid var(--gold);background:var(--parchment);font-size:.94rem}
+.feedback b{font-family:var(--serif)}
+#quizCard{animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hint{font-size:.78rem;color:var(--ink-soft);margin-top:14px}
+
+/* ---------- results ---------- */
+.score-hero{text-align:center;padding:8px 0 4px}
+.score-num{font-family:var(--serif);font-size:clamp(2.6rem,10vw,4rem);color:var(--gold-bright);line-height:1}
+.score-sub{color:var(--ink-soft);margin-top:4px}
+.house-msg{font-family:var(--serif);font-size:1.2rem;margin-top:14px}
+.record{display:inline-block;margin-top:10px;padding:5px 14px;border-radius:99px;background:var(--gold);color:#231a06;font-weight:700;font-size:.82rem}
+.stats{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));margin-top:20px}
+.stat{background:var(--parchment);border:1px solid var(--line);border-radius:11px;padding:12px;text-align:center}
+.stat b{display:block;font-family:var(--serif);font-size:1.5rem;color:var(--gold)}
+.stat span{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--ink-soft);font-size:.74rem;text-transform:uppercase;letter-spacing:.05em}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.review-item{border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin-bottom:10px;background:var(--parchment)}
+.review-item.ok{border-left:4px solid var(--good)}
+.review-item.no{border-left:4px solid var(--bad)}
+.review-q{font-family:var(--serif);margin:0 0 8px}
+.review-item p{margin:4px 0;font-size:.89rem}
+.review-item .exp{color:var(--ink-soft);font-style:italic}
+.err{color:var(--bad);font-weight:600;margin-top:12px}
+details summary{cursor:pointer;font-family:var(--serif);color:var(--gold);font-size:1.05rem;margin-bottom:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+footer{text-align:center;color:var(--ink-soft);font-size:.78rem;margin-top:28px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <button id="themeToggle" aria-label="Toggle light and dark mode" title="Toggle theme">☾</button>
+  <h1>The Hogwarts Examination</h1>
+  <p class="tagline">A quiz on the seven Harry Potter books — book canon only.</p>
+</header>
+
+<!-- ============ START SCREEN ============ -->
+<section id="startScreen" class="card" aria-labelledby="startTitle">
+  <h2 id="startTitle">Set your examination</h2>
+  <div class="grid">
+    <label class="fld">Book
+      <select id="selBook">
+        <option value="all">All seven books</option>
+        <option value="1">1 · Philosopher's Stone</option>
+        <option value="2">2 · Chamber of Secrets</option>
+        <option value="3">3 · Prisoner of Azkaban</option>
+        <option value="4">4 · Goblet of Fire</option>
+        <option value="5">5 · Order of the Phoenix</option>
+        <option value="6">6 · Half-Blood Prince</option>
+        <option value="7">7 · Deathly Hallows</option>
+      </select>
+    </label>
+    <label class="fld">Difficulty
+      <select id="selDiff">
+        <option value="mixed">Mixed</option>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+    </label>
+    <label class="fld">Category
+      <select id="selCat"><option value="all">All categories</option></select>
+    </label>
+    <label class="fld">Questions
+      <input id="selCount" type="number" min="1" max="50" value="10" step="1">
+    </label>
+  </div>
+  <div class="checks">
+    <label><input type="checkbox" id="optFeedback" checked> Immediate feedback</label>
+    <label><input type="checkbox" id="optTimer"> Timer</label>
+    <label><input type="checkbox" id="optSound"> Sound effects</label>
+    <label><input type="checkbox" id="optEndless"> Endless mode (until you miss)</label>
+  </div>
+  <p id="poolInfo" class="hint"></p>
+  <p id="startErr" class="err hidden" role="alert"></p>
+  <div class="btn-row">
+    <button class="btn" id="btnStart">Start Quiz</button>
+    <button class="btn ghost" id="btnRules">How to play</button>
+  </div>
+  <div id="rules" class="hidden">
+    <h3>How to play</h3>
+    <ul style="font-size:.9rem;color:var(--ink-soft)">
+      <li>Ten random questions (or however many you choose) drawn fresh each run — never repeated within a quiz.</li>
+      <li>Answer options are shuffled every time, so position tells you nothing.</li>
+      <li><b>Weighted scoring:</b> easy = 1 point, medium = 2, hard = 3. Your raw correct count is shown too.</li>
+      <li><b>Keyboard:</b> press <kbd>1</kbd>–<kbd>4</kbd> to answer, <kbd>Enter</kbd> or <kbd>→</kbd> for the next question, arrows to move focus.</li>
+      <li>Everything is drawn from the books. Film-only details are flagged and excluded.</li>
+    </ul>
+  </div>
+  <div id="bestBox" class="hint"></div>
+</section>
+
+<!-- ============ QUIZ SCREEN ============ -->
+<section id="quizCard" class="card hidden" aria-live="polite">
+  <div class="qmeta">
+    <span id="progressLabel">Question 1 of 10</span>
+    <span id="statusLabel"></span>
+  </div>
+  <div class="bar"><i id="progressBar" style="width:0%"></i></div>
+  <div class="tags" id="qTags"></div>
+  <p class="qtext" id="qText"></p>
+  <ul class="opts" id="qOpts" role="listbox" aria-label="Answer options"></ul>
+  <div id="feedback" class="feedback hidden"></div>
+  <div class="btn-row">
+    <button class="btn hidden" id="btnNext">Next →</button>
+    <button class="btn ghost" id="btnQuit">Quit</button>
+  </div>
+  <p class="hint">Press 1–4 to answer · Enter for next</p>
+</section>
+
+<!-- ============ RESULTS SCREEN ============ -->
+<section id="resultCard" class="card hidden" aria-labelledby="resTitle">
+  <h2 id="resTitle" class="sr">Results</h2>
+  <div class="score-hero">
+    <div class="score-num" id="resScore"></div>
+    <div class="score-sub" id="resSub"></div>
+    <div class="house-msg" id="resMsg"></div>
+    <div id="resRecord"></div>
+  </div>
+  <div class="stats" id="resStats"></div>
+  <h3>By difficulty</h3><table id="tblDiff"></table>
+  <h3>By book</h3><table id="tblBook"></table>
+  <h3>By category</h3><table id="tblCat"></table>
+  <details style="margin-top:20px"><summary>Review every question</summary><div id="reviewList"></div></details>
+  <div class="btn-row">
+    <button class="btn" id="btnAgain">Play Again</button>
+    <button class="btn ghost" id="btnHome">Change settings</button>
+    <button class="btn ghost" id="btnShare">Copy result</button>
+  </div>
+</section>
+
+<footer>Built for book readers. Question bank is easy to extend — see <code>QUESTIONS</code> in the source.</footer>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   1. QUESTION BANK
+   ------------------------------------------------------------
+   Each entry: { id, book (1-7), difficulty, category, question,
+                 options[], answer (index into options), explanation }
+   Categories: Characters | Spells & Potions | Creatures | Places |
+               Plot | Objects
+   All answers verified against the books, not the films.
+   Add entries anywhere in this array — nothing else needs changing.
+   ============================================================ */
+const QUESTIONS = [
+/* ---------- Book 1 · Philosopher's Stone ---------- */
+{id:"ps-001",book:1,difficulty:"easy",category:"Characters",question:"Which Hogwarts house is Harry sorted into?",options:["Ravenclaw","Gryffindor","Hufflepuff","Slytherin"],answer:1,explanation:"The Sorting Hat considers Slytherin, but Harry asks not to be placed there, and it chooses Gryffindor."},
+{id:"ps-002",book:1,difficulty:"easy",category:"Places",question:"What is the address of the Dursley family home?",options:["Four Privet Drive, Little Whinging","Twelve Grimmauld Place","Spinner's End, Cokeworth","The Burrow, Ottery St Catchpole"],answer:0,explanation:"Number four, Privet Drive, Little Whinging, Surrey — the first address in the series."},
+{id:"ps-003",book:1,difficulty:"easy",category:"Objects",question:"What position does Harry play on the Gryffindor Quidditch team?",options:["Keeper","Chaser","Seeker","Beater"],answer:2,explanation:"He is made Seeker in his first year — the youngest house player in a century."},
+{id:"ps-004",book:1,difficulty:"easy",category:"Creatures",question:"What kind of creature is Hagrid's dog, Fang?",options:["A boarhound","A crup","A bloodhound","A Norwegian Ridgeback"],answer:0,explanation:"Fang is a boarhound: enormous and, as Hagrid admits, a total coward."},
+{id:"ps-005",book:1,difficulty:"easy",category:"Objects",question:"What does the Mirror of Erised show the viewer?",options:["The future","The deepest, most desperate desire of their heart","Their greatest fear","A hidden message"],answer:1,explanation:"'Erised' is 'desire' spelled backwards; Dumbledore warns that men have wasted away before it."},
+{id:"ps-006",book:1,difficulty:"easy",category:"Plot",question:"How does Harry get to Platform Nine and Three-Quarters?",options:["By touching a Portkey on the concourse","By walking through the barrier between platforms nine and ten","By saying a password to the guard","Through a door hidden in the station café"],answer:1,explanation:"Mrs Weasley explains that you walk straight at the barrier between platforms nine and ten."},
+{id:"ps-007",book:1,difficulty:"easy",category:"Characters",question:"Who gives Harry his first wand?",options:["Hagrid","Mr Ollivander","Dumbledore","Professor McGonagall"],answer:1,explanation:"Ollivander sells him the holly and phoenix-feather wand, eleven inches, nice and supple."},
+{id:"ps-008",book:1,difficulty:"medium",category:"Objects",question:"What are the core and wood of Harry's first wand?",options:["Holly and phoenix feather","Yew and phoenix feather","Vine and dragon heartstring","Ash and unicorn hair"],answer:0,explanation:"Holly, eleven inches, phoenix feather — from the same phoenix that supplied Voldemort's core."},
+{id:"ps-009",book:1,difficulty:"medium",category:"Creatures",question:"What is the name of the three-headed dog guarding the trapdoor?",options:["Norbert","Fluffy","Fang","Aragog"],answer:1,explanation:"Fluffy belongs to Hagrid, who bought him from a Greek chap in a pub."},
+{id:"ps-010",book:1,difficulty:"medium",category:"Spells & Potions",question:"Which spell does Hermione correct Ron's pronunciation of on the night of the troll?",options:["Alohomora","Wingardium Leviosa","Petrificus Totalus","Lumos"],answer:1,explanation:"'It's Levi-o-sa, not Leviosa' — the correction that sends Ron sulking and Hermione to the bathroom."},
+{id:"ps-011",book:1,difficulty:"medium",category:"Plot",question:"Who created the Philosopher's Stone?",options:["Albus Dumbledore","Nicolas Flamel","Paracelsus","Cornelius Agrippa"],answer:1,explanation:"Flamel, the alchemist and Dumbledore's partner, is named on Dumbledore's Chocolate Frog card."},
+{id:"ps-012",book:1,difficulty:"medium",category:"Plot",question:"Which protection of the Stone was Professor Snape's contribution?",options:["The chess set","The logic puzzle with the potion bottles","The winged keys","The Devil's Snare"],answer:1,explanation:"Snape's riddle in verse; Hermione solves it, noting most wizards haven't an ounce of logic."},
+{id:"ps-013",book:1,difficulty:"medium",category:"Characters",question:"What is the name of Harry's snowy owl?",options:["Errol","Hermes","Hedwig","Pigwidgeon"],answer:2,explanation:"Harry takes the name Hedwig from A History of Magic."},
+{id:"ps-014",book:1,difficulty:"medium",category:"Creatures",question:"What kind of dragon does Hagrid hatch and name Norbert?",options:["Hungarian Horntail","Common Welsh Green","Norwegian Ridgeback","Chinese Fireball"],answer:2,explanation:"A Norwegian Ridgeback, won in a card game from a hooded stranger in a pub."},
+{id:"ps-015",book:1,difficulty:"medium",category:"Places",question:"Which vault at Gringotts held the Philosopher's Stone before it was moved to Hogwarts?",options:["Vault 713","Vault 687","Vault 711","Vault 12"],answer:0,explanation:"Hagrid empties vault seven hundred and thirteen the same day Harry first visits Gringotts."},
+{id:"ps-016",book:1,difficulty:"hard",category:"Spells & Potions",question:"How many uses of dragon's blood did Dumbledore discover, according to his Chocolate Frog card?",options:["Seven","Twelve","Three","Twenty-one"],answer:1,explanation:"The card credits him with the discovery of the twelve uses of dragon's blood."},
+{id:"ps-017",book:1,difficulty:"hard",category:"Plot",question:"What was Professor Quirrell's cover story for the turban he wore?",options:["A gift from an African prince for defeating a zombie","Protection against a curse in the Forbidden Forest","A family heirloom from his grandmother","A ward against Dementors"],answer:0,explanation:"The story was a thank-you from an African prince — one the Weasley twins never believed."},
+{id:"ps-018",book:1,difficulty:"hard",category:"Objects",question:"What message is inscribed around the frame of the Mirror of Erised?",options:["'Erised stra ehru oyt ube cafru oyt on wohsi'","'Nitpick, nutmeg, oddment, tweak'","'Draco dormiens nunquam titillandus'","'I open at the close'"],answer:0,explanation:"Read backwards it says: 'I show not your face but your heart's desire.'"},
+{id:"ps-019",book:1,difficulty:"hard",category:"Plot",question:"On the giant chessboard, which piece does Ron take the place of?",options:["A bishop","A knight","A castle","A pawn"],answer:1,explanation:"Ron plays a knight and sacrifices himself so Harry can checkmate."},
+{id:"ps-020",book:1,difficulty:"hard",category:"Characters",question:"How many points did Dumbledore award Neville at the leaving feast, and why?",options:["Ten, for standing up to his friends","Ten, for solving the potions riddle","Fifty, for bravery in the forest","Five, for helping in Herbology"],answer:0,explanation:"'It takes a great deal of bravery to stand up to our enemies, but just as much to stand up to our friends.'"},
+{id:"ps-021",book:1,difficulty:"hard",category:"Creatures",question:"What creature was drinking the unicorn's blood in the Forbidden Forest?",options:["A werewolf","An acromantula","Voldemort, sustained through Quirrell","A vampire"],answer:2,explanation:"Firenze explains that unicorn blood keeps you alive at the price of a cursed half-life."},
+
+/* ---------- Book 2 · Chamber of Secrets ---------- */
+{id:"cs-001",book:2,difficulty:"easy",category:"Creatures",question:"What creature lives in the Chamber of Secrets?",options:["A basilisk","A manticore","A chimaera","A nundu"],answer:0,explanation:"Slytherin's monster is a basilisk, travelling through the castle's plumbing."},
+{id:"cs-002",book:2,difficulty:"easy",category:"Characters",question:"Which house-elf tries to stop Harry returning to Hogwarts?",options:["Kreacher","Winky","Dobby","Hokey"],answer:2,explanation:"Dobby, then bound to the Malfoys, intercepts Harry's post and seals the barrier."},
+{id:"cs-003",book:2,difficulty:"easy",category:"Objects",question:"How do Harry and Ron travel to Hogwarts after missing the train?",options:["By Floo powder","By Knight Bus","In Mr Weasley's flying Ford Anglia","By broomstick"],answer:2,explanation:"They fly the enchanted Ford Anglia, and crash it into the Whomping Willow."},
+{id:"cs-004",book:2,difficulty:"easy",category:"Characters",question:"Who is the new Defence Against the Dark Arts teacher in Harry's second year?",options:["Remus Lupin","Gilderoy Lockhart","Quirinus Quirrell","Dolores Umbridge"],answer:1,explanation:"Lockhart — celebrity author, Order of Merlin Third Class, and a fraud."},
+{id:"cs-005",book:2,difficulty:"easy",category:"Characters",question:"Who haunts the girls' bathroom on the first floor?",options:["The Grey Lady","Moaning Myrtle","The Bloody Baron","The Fat Friar"],answer:1,explanation:"Myrtle Warren died in that bathroom when the basilisk was first released."},
+{id:"cs-006",book:2,difficulty:"easy",category:"Plot",question:"What ability lets Harry hear the basilisk moving through the walls?",options:["Legilimency","Parseltongue","Occlumency","Divination"],answer:1,explanation:"Only a Parselmouth can understand the snake's voice in the pipes."},
+{id:"cs-007",book:2,difficulty:"medium",category:"Objects",question:"Whose diary does Ginny Weasley write in?",options:["Salazar Slytherin's","Tom Riddle's","Armando Dippet's","Gilderoy Lockhart's"],answer:1,explanation:"The diary is Voldemort's first Horcrux, though that word is not used until book six."},
+{id:"cs-008",book:2,difficulty:"medium",category:"Plot",question:"What is the anagram Tom Riddle reveals in the Chamber?",options:["'Tom Marvolo Riddle' → 'I am Lord Voldemort'","'Tom Riddle' → 'Dark Lord'","'Marvolo Gaunt' → 'Avatar Long'","'Riddle Junior' → 'Dire Lord'"],answer:0,explanation:"He writes his full name in fiery letters and rearranges it with a wave of the wand."},
+{id:"cs-009",book:2,difficulty:"medium",category:"Creatures",question:"What is the name of Hagrid's acromantula in the Forbidden Forest?",options:["Mosag","Aragog","Buckbeak","Grawp"],answer:1,explanation:"Aragog was the creature Hagrid was wrongly expelled for keeping."},
+{id:"cs-010",book:2,difficulty:"medium",category:"Spells & Potions",question:"Which potion do Harry, Ron and Hermione brew to infiltrate the Slytherin common room?",options:["Veritaserum","Polyjuice Potion","Felix Felicis","Draught of Living Death"],answer:1,explanation:"Hermione brews it in Myrtle's bathroom; her cat hair goes badly wrong."},
+{id:"cs-011",book:2,difficulty:"medium",category:"Characters",question:"Which student is petrified first?",options:["Colin Creevey","Justin Finch-Fletchley","Mrs Norris","Hermione Granger"],answer:2,explanation:"Mrs Norris, Filch's cat, is the first victim — though not a student."},
+{id:"cs-012",book:2,difficulty:"medium",category:"Objects",question:"What does Harry pull out of the Sorting Hat in the Chamber?",options:["The sword of Godric Gryffindor","Ravenclaw's diadem","A basilisk fang","A phoenix feather"],answer:0,explanation:"Only a true Gryffindor could have pulled the sword from the Hat."},
+{id:"cs-013",book:2,difficulty:"medium",category:"Characters",question:"How is Lucius Malfoy tricked into freeing Dobby?",options:["Harry hides a sock in the diary and Lucius throws it to him","Dumbledore orders him to","Dobby resigns in front of the Ministry","Harry buys Dobby's contract"],answer:0,explanation:"Harry slips his sock into the diary; Lucius flings it aside and Dobby catches clothing."},
+{id:"cs-014",book:2,difficulty:"medium",category:"Spells & Potions",question:"What backfires on Ron for most of the year, thanks to his broken wand?",options:["His Slug-vomiting curse","His Disarming Charm","His Memory Charm","His Summoning Charm"],answer:0,explanation:"'Eat Slugs!' rebounds after the Whomping Willow snaps his wand."},
+{id:"cs-015",book:2,difficulty:"hard",category:"Plot",question:"Which plant does Professor Sprout use to revive the petrified victims?",options:["Gillyweed","Mandrake","Dittany","Wolfsbane"],answer:1,explanation:"A Mandrake Restorative Draught, once the second-year Mandrakes are mature."},
+{id:"cs-016",book:2,difficulty:"hard",category:"Characters",question:"What is Nearly Headless Nick's full name?",options:["Sir Nicholas de Mimsy-Porpington","Sir Nicholas Fitzwilliam","Sir Nicolas Flamel-Porpington","Sir Nick Wendell-Porpington"],answer:0,explanation:"Revealed at his five-hundredth Deathday Party."},
+{id:"cs-017",book:2,difficulty:"hard",category:"Plot",question:"Which spell does Lockhart attempt in the Chamber, and with what result?",options:["A Memory Charm, which rebounds and wipes his own memory","A Stunning Spell, which misses","A Shield Charm, which shatters","A Summoning Charm, which fetches the basilisk"],answer:0,explanation:"He uses Ron's broken wand; the Obliviate rebounds and destroys his memory."},
+{id:"cs-018",book:2,difficulty:"hard",category:"Places",question:"Where is the entrance to the Chamber of Secrets?",options:["Behind a portrait on the seventh floor","In a tap in Moaning Myrtle's bathroom","Under the Whomping Willow","Behind the Slytherin common-room fireplace"],answer:1,explanation:"A tap engraved with a small snake, opened by speaking Parseltongue."},
+{id:"cs-019",book:2,difficulty:"hard",category:"Objects",question:"What did Hermione find clutched in the petrified Hermione's hand, explaining how she deduced the monster?",options:["A hand mirror and a torn page about basilisks","A rooster feather","A page from Hogwarts, A History","A vial of Polyjuice"],answer:0,explanation:"The torn library page named the basilisk; 'pipes' was scrawled in the margin, and the mirror let her look round corners."},
+{id:"cs-020",book:2,difficulty:"hard",category:"Creatures",question:"What is the natural enemy of the basilisk, fatal to it?",options:["The crowing of a rooster","Phoenix song","Unicorn blood","Salamander fire"],answer:0,explanation:"The library page notes that the crowing of the rooster is fatal to it — which is why Hagrid's cockerels were killed."},
+{id:"cs-021",book:2,difficulty:"hard",category:"Characters",question:"Who was blamed and expelled when the Chamber was opened fifty years earlier?",options:["Rubeus Hagrid","Argus Filch","Tom Riddle","Myrtle Warren"],answer:0,explanation:"Riddle framed Hagrid over Aragog; Dumbledore kept Hagrid on as gamekeeper."},
+
+/* ---------- Book 3 · Prisoner of Azkaban ---------- */
+{id:"pa-001",book:3,difficulty:"easy",category:"Characters",question:"Who is Harry's godfather?",options:["Remus Lupin","Sirius Black","Peter Pettigrew","Severus Snape"],answer:1,explanation:"Sirius Black, wrongly imprisoned for the murders Pettigrew committed."},
+{id:"pa-002",book:3,difficulty:"easy",category:"Creatures",question:"What creatures guard Azkaban?",options:["Dementors","Inferi","Boggarts","Trolls"],answer:0,explanation:"Dementors feed on happiness and leave you with your worst memories."},
+{id:"pa-003",book:3,difficulty:"easy",category:"Spells & Potions",question:"Which spell repels a Dementor?",options:["Expelliarmus","Expecto Patronum","Riddikulus","Protego"],answer:1,explanation:"The Patronus Charm, which Lupin teaches Harry privately."},
+{id:"pa-004",book:3,difficulty:"easy",category:"Creatures",question:"What form does Harry's Patronus take?",options:["A stag","A doe","A dog","An otter"],answer:0,explanation:"A stag, matching his father's Animagus form, Prongs."},
+{id:"pa-005",book:3,difficulty:"easy",category:"Creatures",question:"What kind of creature is Buckbeak?",options:["A thestral","A hippogriff","A griffin","A centaur"],answer:1,explanation:"A hippogriff, and very proud — you must bow and wait."},
+{id:"pa-006",book:3,difficulty:"easy",category:"Characters",question:"What is Remus Lupin's secret?",options:["He is an Animagus","He is a werewolf","He is a Death Eater","He is a Squib"],answer:1,explanation:"Bitten as a child by Fenrir Greyback; the Wolfsbane Potion keeps him harmless."},
+{id:"pa-007",book:3,difficulty:"medium",category:"Objects",question:"What does the Marauder's Map show?",options:["Every person's location in Hogwarts and its grounds","All secret passages only","The location of magical objects","The past movements of Death Eaters"],answer:0,explanation:"Every occupant of the castle and grounds, moving in labelled dots."},
+{id:"pa-008",book:3,difficulty:"medium",category:"Objects",question:"What phrase reveals the Marauder's Map?",options:["'I solemnly swear that I am up to no good'","'Mischief managed'","'Open at the close'","'Lumos Maxima'"],answer:0,explanation:"'Mischief managed' is the phrase that wipes it blank again."},
+{id:"pa-009",book:3,difficulty:"medium",category:"Characters",question:"Which Marauder nickname belonged to Peter Pettigrew?",options:["Padfoot","Moony","Wormtail","Prongs"],answer:2,explanation:"Wormtail — his Animagus form is a rat, Ron's pet Scabbers."},
+{id:"pa-010",book:3,difficulty:"medium",category:"Objects",question:"What device does Hermione use to attend overlapping classes?",options:["A Portkey","A Time-Turner","A Pensieve","A Vanishing Cabinet"],answer:1,explanation:"Professor McGonagall obtained it from the Ministry for her timetable."},
+{id:"pa-011",book:3,difficulty:"medium",category:"Creatures",question:"What does a boggart become when it faces Professor Lupin?",options:["A full moon","A Dementor","A snake","A grave"],answer:0,explanation:"Lupin's boggart is the moon — the trigger for his transformation."},
+{id:"pa-012",book:3,difficulty:"medium",category:"Spells & Potions",question:"What is the incantation used against a boggart?",options:["Reducto","Riddikulus","Reparo","Relashio"],answer:1,explanation:"Laughter is what finishes a boggart; the charm forces it into something absurd."},
+{id:"pa-013",book:3,difficulty:"medium",category:"Plot",question:"What form does Sirius Black's Animagus take?",options:["A large black dog","A stag","A rat","A black cat"],answer:0,explanation:"The Grim-like dog Harry glimpses in Magnolia Crescent."},
+{id:"pa-014",book:3,difficulty:"medium",category:"Characters",question:"Which Divination teacher makes a genuine prophecy in Harry's third year?",options:["Firenze","Sybill Trelawney","Cassandra Vablatsky","Bathsheda Babbling"],answer:1,explanation:"Trelawney goes rigid and foretells that the Dark Lord's servant will rejoin him."},
+{id:"pa-015",book:3,difficulty:"hard",category:"Objects",question:"What broom does Harry receive anonymously at Christmas?",options:["A Nimbus Two Thousand and One","A Firebolt","A Comet Two Sixty","A Cleansweep Seven"],answer:1,explanation:"Sent by Sirius; McGonagall confiscates it for weeks of jinx-testing."},
+{id:"pa-016",book:3,difficulty:"hard",category:"Plot",question:"What does Professor Snape see when he looks at the Marauder's Map?",options:["Blank parchment","Insults signed by Moony, Wormtail, Padfoot and Prongs","Harry's location in the Shrieking Shack","A map of Hogsmeade"],answer:1,explanation:"The map, refusing to reveal itself, mocks him by name from all four Marauders."},
+{id:"pa-017",book:3,difficulty:"hard",category:"Places",question:"Which Hogsmeade passage do Fred and George show Harry on the map?",options:["The one-eyed witch passage to Honeydukes","The Whomping Willow tunnel","The passage behind the mirror on the fourth floor","The Room of Requirement tunnel"],answer:0,explanation:"Tap the one-eyed witch's hump and say 'Dissendium'."},
+{id:"pa-018",book:3,difficulty:"hard",category:"Plot",question:"Who cast the Patronus that drove off the Dementors by the lake?",options:["Dumbledore","Sirius Black","Harry, from across the lake, three hours later","Remus Lupin"],answer:2,explanation:"Harry realises he isn't seeing his father — 'I knew I could do it, because I'd already done it.'"},
+{id:"pa-019",book:3,difficulty:"hard",category:"Characters",question:"What was Sirius Black's actual crime, legally speaking, that he was never tried for?",options:["He was never tried at all","Murdering thirteen Muggles","Betraying the Potters","Escaping Azkaban"],answer:0,explanation:"Sirius was sent to Azkaban without a trial — a point Sirius makes bitterly in later books."},
+{id:"pa-020",book:3,difficulty:"hard",category:"Creatures",question:"What is the term for a wizard who can transform into an animal at will?",options:["Metamorphmagus","Animagus","Werewolf","Legilimens"],answer:1,explanation:"Animagi must register with the Ministry; James, Sirius and Peter never did."},
+{id:"pa-021",book:3,difficulty:"hard",category:"Places",question:"Why was the Shrieking Shack built, and by whom?",options:["By Dumbledore, so Lupin could transform safely","By the Ministry, as a safe house","By Sirius, as a hiding place","By the Marauders, as a clubhouse"],answer:0,explanation:"The screams villagers heard were Lupin's transformations; the Whomping Willow guards the tunnel."},
+
+/* ---------- Book 4 · Goblet of Fire ---------- */
+{id:"gf-001",book:4,difficulty:"easy",category:"Plot",question:"What competition is held at Hogwarts in Harry's fourth year?",options:["The Triwizard Tournament","The Quidditch World Cup","The Duelling Championship","The Wizarding Schools Potions Challenge"],answer:0,explanation:"Revived after centuries, with an age line meant to keep out under-seventeens."},
+{id:"gf-002",book:4,difficulty:"easy",category:"Places",question:"Which two schools visit Hogwarts for the Tournament?",options:["Beauxbatons and Durmstrang","Ilvermorny and Mahoutokoro","Castelobruxo and Uagadou","Koldovstoretz and Beauxbatons"],answer:0,explanation:"Madame Maxime's Beauxbatons and Karkaroff's Durmstrang."},
+{id:"gf-003",book:4,difficulty:"easy",category:"Characters",question:"Who is the fourth champion selected by the Goblet of Fire?",options:["Cedric Diggory","Harry Potter","Viktor Krum","Fleur Delacour"],answer:1,explanation:"Harry's name comes out under a fourth school, and the contract binds him."},
+{id:"gf-004",book:4,difficulty:"easy",category:"Creatures",question:"What must the champions face in the first task?",options:["Grindylows","Dragons","A sphinx","Blast-Ended Skrewts"],answer:1,explanation:"Each retrieves a golden egg from a nesting mother dragon."},
+{id:"gf-005",book:4,difficulty:"easy",category:"Characters",question:"Who does Harry take to the Yule Ball?",options:["Cho Chang","Parvati Patil","Ginny Weasley","Hermione Granger"],answer:1,explanation:"Parvati Patil, with Padma paired off with Ron — neither evening goes well."},
+{id:"gf-006",book:4,difficulty:"easy",category:"Characters",question:"Who does Hermione attend the Yule Ball with?",options:["Ron Weasley","Viktor Krum","Cormac McLaggen","Neville Longbottom"],answer:1,explanation:"Krum, to Ron's considerable and poorly hidden annoyance."},
+{id:"gf-007",book:4,difficulty:"medium",category:"Spells & Potions",question:"What are the three Unforgivable Curses?",options:["Imperius, Cruciatus, Avada Kedavra","Sectumsempra, Confringo, Morsmordre","Crucio, Obliviate, Imperio","Avada Kedavra, Fiendfyre, Crucio"],answer:0,explanation:"Demonstrated on spiders by the false Moody; each carries a life sentence in Azkaban."},
+{id:"gf-008",book:4,difficulty:"medium",category:"Plot",question:"Which dragon does Harry face in the first task?",options:["Swedish Short-Snout","Chinese Fireball","Hungarian Horntail","Common Welsh Green"],answer:2,explanation:"The nastiest of the four, drawn last from Bagman's bag."},
+{id:"gf-009",book:4,difficulty:"medium",category:"Objects",question:"What does Harry use to breathe underwater in the second task?",options:["Gillyweed","A Bubble-Head Charm","Human Transfiguration","A Head Bubble Potion"],answer:0,explanation:"Dobby gives him gillyweed, taken from Snape's stores."},
+{id:"gf-010",book:4,difficulty:"medium",category:"Characters",question:"Who is impersonating Alastor Moody for the entire school year?",options:["Peter Pettigrew","Barty Crouch Junior","Igor Karkaroff","Regulus Black"],answer:1,explanation:"Sustained by Polyjuice Potion drunk from a hip flask every hour."},
+{id:"gf-011",book:4,difficulty:"medium",category:"Characters",question:"What is the name of the Ministry's Head of Magical Games and Sports?",options:["Ludo Bagman","Barty Crouch Senior","Amos Diggory","Cornelius Fudge"],answer:0,explanation:"Bagman, a former Beater with heavy gambling debts to goblins."},
+{id:"gf-012",book:4,difficulty:"medium",category:"Objects",question:"What object is turned into a Portkey at the end of the third task?",options:["The Goblet of Fire","The Triwizard Cup","The golden egg","Harry's broomstick"],answer:1,explanation:"Bewitched by Crouch Junior to take the winner straight to Little Hangleton."},
+{id:"gf-013",book:4,difficulty:"medium",category:"Plot",question:"What appears in the sky over the Quidditch World Cup campsite?",options:["The Dark Mark","A Patronus","Fiendfyre","The Hogwarts crest"],answer:0,explanation:"Conjured with Harry's stolen wand by Winky's master, Barty Crouch Junior."},
+{id:"gf-014",book:4,difficulty:"medium",category:"Characters",question:"Which house-elf is dismissed by Barty Crouch Senior?",options:["Dobby","Winky","Kreacher","Hokey"],answer:1,explanation:"Winky is given clothes for being found with the wand — she never recovers."},
+{id:"gf-015",book:4,difficulty:"hard",category:"Plot",question:"What three ingredients are used in the ritual that restores Voldemort's body?",options:["Bone of the father, flesh of the servant, blood of the enemy","Blood of the father, hair of the servant, tears of the enemy","Ash of the father, bone of the servant, blood of the friend","Bone of the mother, flesh of the friend, blood of the enemy"],answer:0,explanation:"'Bone of the father, unknowingly given… flesh of the servant, willingly given… blood of the enemy, forcibly taken.'"},
+{id:"gf-016",book:4,difficulty:"hard",category:"Spells & Potions",question:"What is the effect called when Harry's and Voldemort's wands connect in the graveyard?",options:["Priori Incantatem","Protego Diabolica","Reverse Spell Effect Charm","Geminio"],answer:0,explanation:"Brother wands force one to regurgitate its previous spells, in reverse order."},
+{id:"gf-017",book:4,difficulty:"hard",category:"Characters",question:"Which journalist is an unregistered Animagus, and in what form?",options:["Rita Skeeter, as a beetle","Rita Skeeter, as a moth","Bozo, as a fly","Betty Braithwaite, as a beetle"],answer:0,explanation:"Hermione catches her in a jar — how she got her exclusives from locked rooms."},
+{id:"gf-018",book:4,difficulty:"hard",category:"Plot",question:"What is the answer to the sphinx's riddle in the maze?",options:["Spider","Spy","Doxy","Serpent"],answer:0,explanation:"'Spy' + 'd' + 'er' — the creature Harry least likes to kiss."},
+{id:"gf-019",book:4,difficulty:"hard",category:"Objects",question:"What clue is hidden inside the golden egg, and how is it heard?",options:["A merpeople song, audible underwater","A written riddle, revealed by heat","A recorded voice, released by a password","A map, visible only in moonlight"],answer:0,explanation:"Cedric hints at a bath; the shrieking becomes a song beneath the water."},
+{id:"gf-020",book:4,difficulty:"hard",category:"Characters",question:"What organisation does Hermione found in her fourth year?",options:["S.P.E.W. — the Society for the Promotion of Elfish Welfare","D.A. — Dumbledore's Army","The Order of the Phoenix","The Gobstones Club"],answer:0,explanation:"Badges cost two Sickles; membership stays stubbornly small."},
+{id:"gf-021",book:4,difficulty:"hard",category:"Plot",question:"Which team won the Quidditch World Cup final Harry attends?",options:["Ireland","Bulgaria","England","Peru"],answer:0,explanation:"Ireland won, though Krum caught the Snitch — exactly as the twins bet."},
+
+/* ---------- Book 5 · Order of the Phoenix ---------- */
+{id:"op-001",book:5,difficulty:"easy",category:"Characters",question:"Who is appointed Hogwarts High Inquisitor?",options:["Dolores Umbridge","Cornelius Fudge","Rufus Scrimgeour","Percy Weasley"],answer:0,explanation:"Umbridge is installed by the Ministry and steadily seizes control of the school."},
+{id:"op-002",book:5,difficulty:"easy",category:"Plot",question:"What is the secret student group Harry teaches called?",options:["The Order of the Phoenix","Dumbledore's Army","The Defence League","The Phoenix Guard"],answer:1,explanation:"Ginny names it — 'the Ministry's worst fear'."},
+{id:"op-003",book:5,difficulty:"easy",category:"Places",question:"Where does the Order of the Phoenix have its headquarters?",options:["The Burrow","Number twelve, Grimmauld Place","Hogsmeade's Hog's Head","Godric's Hollow"],answer:1,explanation:"Sirius's family house, hidden by the Fidelius Charm with Dumbledore as Secret-Keeper."},
+{id:"op-004",book:5,difficulty:"easy",category:"Places",question:"Where does the final battle of the book take place?",options:["The Department of Mysteries","The Great Hall","The Shrieking Shack","Little Hangleton graveyard"],answer:0,explanation:"In the Hall of Prophecy and the adjoining chambers of the Ministry."},
+{id:"op-005",book:5,difficulty:"easy",category:"Characters",question:"Which house-elf serves the Black family at Grimmauld Place?",options:["Dobby","Winky","Kreacher","Hokey"],answer:2,explanation:"Kreacher, muttering about Mudbloods and devoted to the memory of Mrs Black."},
+{id:"op-006",book:5,difficulty:"easy",category:"Characters",question:"Which new student befriends Harry and reads The Quibbler upside down?",options:["Luna Lovegood","Cho Chang","Susan Bones","Hannah Abbott"],answer:0,explanation:"Luna, of Ravenclaw, whose father edits The Quibbler."},
+{id:"op-007",book:5,difficulty:"medium",category:"Creatures",question:"What creatures pull the Hogwarts carriages, visible only to those who have seen death?",options:["Thestrals","Abraxans","Granians","Hippogriffs"],answer:0,explanation:"Harry can see them for the first time this year, after witnessing Cedric's death."},
+{id:"op-008",book:5,difficulty:"medium",category:"Places",question:"What room appears when a student walks past its wall three times, needing something?",options:["The Room of Requirement","The Chamber of Secrets","The Hall of Prophecy","The Vanishing Room"],answer:0,explanation:"Dobby tells Harry about it; the D.A. use it for practice."},
+{id:"op-009",book:5,difficulty:"medium",category:"Spells & Potions",question:"What discipline does Snape attempt to teach Harry in private lessons?",options:["Legilimency","Occlumency","Non-verbal spells","Advanced Potions"],answer:1,explanation:"Occlumency — closing the mind against external penetration."},
+{id:"op-010",book:5,difficulty:"medium",category:"Objects",question:"What does Umbridge's black quill do?",options:["It writes in the user's own blood, carving the words into their hand","It reveals lies in red ink","It copies whatever is written nearby","It cannot write untruths"],answer:0,explanation:"'I must not tell lies' is scarred into the back of Harry's hand."},
+{id:"op-011",book:5,difficulty:"medium",category:"Characters",question:"Which Order member is a Metamorphmagus?",options:["Nymphadora Tonks","Kingsley Shacklebolt","Emmeline Vance","Hestia Jones"],answer:0,explanation:"Tonks can change her appearance at will and hates her first name."},
+{id:"op-012",book:5,difficulty:"medium",category:"Plot",question:"Who dies at the end of Order of the Phoenix?",options:["Sirius Black","Remus Lupin","Mad-Eye Moody","Dobby"],answer:0,explanation:"Struck by Bellatrix's curse, he falls through the veiled archway."},
+{id:"op-013",book:5,difficulty:"medium",category:"Characters",question:"Who is the Ministry-appointed Minister for Magic during this book?",options:["Cornelius Fudge","Rufus Scrimgeour","Pius Thicknesse","Millicent Bagnold"],answer:0,explanation:"Fudge spends the year denying Voldemort's return and smearing Harry."},
+{id:"op-014",book:5,difficulty:"medium",category:"Spells & Potions",question:"Which spell does Harry teach the D.A. that becomes his signature?",options:["Expelliarmus","Stupefy","Impedimenta","Reducto"],answer:0,explanation:"The Disarming Charm — mocked by Death Eaters, but it defines him."},
+{id:"op-015",book:5,difficulty:"hard",category:"Plot",question:"What is the key line of the prophecy about Harry and Voldemort?",options:["'Neither can live while the other survives'","'The one with the power approaches'","'Blood will end what blood began'","'The Dark Lord shall rise again'"],answer:0,explanation:"'…and either must die at the hand of the other for neither can live while the other survives.'"},
+{id:"op-016",book:5,difficulty:"hard",category:"Characters",question:"Who overheard part of the prophecy and reported it to Voldemort?",options:["Severus Snape","Peter Pettigrew","Igor Karkaroff","Mundungus Fletcher"],answer:0,explanation:"Snape heard the first part at the Hog's Head before being thrown out."},
+{id:"op-017",book:5,difficulty:"hard",category:"Places",question:"Which shop do Fred and George open after leaving Hogwarts?",options:["Weasleys' Wizard Wheezes, Diagon Alley","Zonko's, Hogsmeade","Gambol and Japes","The Leaky Cauldron"],answer:0,explanation:"Funded by Harry's Triwizard winnings, which he gave them."},
+{id:"op-018",book:5,difficulty:"hard",category:"Plot",question:"What memory does Harry see in Snape's Pensieve?",options:["James and Sirius bullying Snape after their O.W.L.","Snape joining the Death Eaters","Lily rejecting Snape at the lake","Snape brewing his first potion"],answer:0,explanation:"'Snape's Worst Memory' — James hangs him upside down after the D.A.D.A. exam."},
+{id:"op-019",book:5,difficulty:"hard",category:"Characters",question:"Where are Neville's parents, and why?",options:["St Mungo's, tortured to insanity by Death Eaters","In hiding abroad","Dead, killed at Godric's Hollow","Working undercover for the Order"],answer:0,explanation:"The Longbottoms were tortured with the Cruciatus Curse by Bellatrix Lestrange and others."},
+{id:"op-020",book:5,difficulty:"hard",category:"Creatures",question:"Who is Grawp?",options:["Hagrid's half-brother, a giant","A centaur leader","An acromantula","A mountain troll"],answer:0,explanation:"Hagrid brings him back from the giants and hides him in the Forest."},
+{id:"op-021",book:5,difficulty:"hard",category:"Objects",question:"How do Harry and the others reach the Ministry from Hogwarts?",options:["On thestrals","By Floo powder","By Portkey","On broomsticks"],answer:0,explanation:"Six of them fly on thestrals, though only Harry, Luna and Neville can see them."},
+{id:"op-022",book:5,difficulty:"hard",category:"Plot",question:"What happens to Umbridge in the Forbidden Forest?",options:["She is carried off by centaurs","She is trampled by Grawp","She Apparates away","She is stunned by Hagrid"],answer:0,explanation:"She insults the centaurs, who take her; Dumbledore later retrieves her."},
+
+/* ---------- Book 6 · Half-Blood Prince ---------- */
+{id:"hb-001",book:6,difficulty:"easy",category:"Characters",question:"Who is the Half-Blood Prince?",options:["Severus Snape","Tom Riddle","Draco Malfoy","Regulus Black"],answer:0,explanation:"Snape's mother was Eileen Prince; his father was a Muggle."},
+{id:"hb-002",book:6,difficulty:"easy",category:"Characters",question:"Who dies at the end of Half-Blood Prince?",options:["Albus Dumbledore","Severus Snape","Rubeus Hagrid","Alastor Moody"],answer:0,explanation:"Killed on the Astronomy Tower by Snape, as they had privately arranged."},
+{id:"hb-003",book:6,difficulty:"easy",category:"Characters",question:"Which teacher returns to Hogwarts to teach Potions?",options:["Horace Slughorn","Aurora Sinistra","Wilkie Twycross","Septima Vector"],answer:0,explanation:"Slughorn takes Potions so Snape can finally have Defence Against the Dark Arts."},
+{id:"hb-004",book:6,difficulty:"easy",category:"Plot",question:"What are the objects Voldemort used to split his soul called?",options:["Horcruxes","Hallows","Phylacteries","Soul-vessels"],answer:0,explanation:"Slughorn's true memory reveals Voldemort asked about making seven."},
+{id:"hb-005",book:6,difficulty:"easy",category:"Characters",question:"Who does Harry begin a relationship with in this book?",options:["Ginny Weasley","Cho Chang","Hermione Granger","Luna Lovegood"],answer:0,explanation:"After Gryffindor's Quidditch win, in front of the whole common room."},
+{id:"hb-006",book:6,difficulty:"easy",category:"Spells & Potions",question:"What does Felix Felicis do?",options:["Grants good luck","Forces the truth","Induces love","Grants invisibility"],answer:0,explanation:"Liquid luck — Harry wins a vial from Slughorn on the first day."},
+{id:"hb-007",book:6,difficulty:"medium",category:"Objects",question:"What task has Voldemort set Draco Malfoy?",options:["To kill Dumbledore","To steal the prophecy","To open the Chamber of Secrets","To recruit the giants"],answer:0,explanation:"With the Vanishing Cabinet as his eventual route for the Death Eaters."},
+{id:"hb-008",book:6,difficulty:"medium",category:"Objects",question:"How do the Death Eaters get into Hogwarts?",options:["Through a pair of Vanishing Cabinets","Through the Chamber of Secrets","By Portkey","Through the Whomping Willow tunnel"],answer:0,explanation:"Draco repairs the broken cabinet in the Room of Requirement; its twin sits in Borgin and Burkes."},
+{id:"hb-009",book:6,difficulty:"medium",category:"Spells & Potions",question:"What does the spell Sectumsempra do?",options:["It slashes the target as if by an invisible sword","It seals the target's mouth","It sets the target on fire","It severs a limb permanently"],answer:0,explanation:"Marked 'For enemies' in the Prince's book; Harry uses it on Draco without knowing."},
+{id:"hb-010",book:6,difficulty:"medium",category:"Plot",question:"Which Horcrux does Dumbledore destroy before the events of this book?",options:["Marvolo Gaunt's ring","Slytherin's locket","Hufflepuff's cup","Ravenclaw's diadem"],answer:0,explanation:"The ring's curse blackens his hand and would have killed him within the year."},
+{id:"hb-011",book:6,difficulty:"medium",category:"Objects",question:"What do Harry and Dumbledore find in place of the locket in the seaside cave?",options:["A fake locket with a note signed R.A.B.","An empty basin","A diary page","Slytherin's ring"],answer:0,explanation:"Regulus Arcturus Black had already taken the real one."},
+{id:"hb-012",book:6,difficulty:"medium",category:"Characters",question:"What is Slughorn's exclusive social circle called?",options:["The Slug Club","The Potion Society","The Inner Circle","The Slughorn Set"],answer:0,explanation:"He collects promising students, hoping to be owed favours later."},
+{id:"hb-013",book:6,difficulty:"medium",category:"Objects",question:"What device does Dumbledore use to view stored memories?",options:["A Pensieve","A Foe-Glass","An Omnioculars set","A Sneakoscope"],answer:0,explanation:"A shallow stone basin carved with runes, kept in his office."},
+{id:"hb-014",book:6,difficulty:"medium",category:"Characters",question:"Whom does Ron date for much of the year, to Hermione's fury?",options:["Lavender Brown","Parvati Patil","Romilda Vane","Padma Patil"],answer:0,explanation:"'Won-Won' — the relationship ends after his poisoning."},
+{id:"hb-015",book:6,difficulty:"hard",category:"Plot",question:"How many Horcruxes did Voldemort intend to make?",options:["Six, splitting his soul into seven parts","Seven separate objects","Three","Twelve"],answer:0,explanation:"Six Horcruxes plus the fragment in his own body — seven, the most powerfully magical number."},
+{id:"hb-016",book:6,difficulty:"hard",category:"Characters",question:"Who were Voldemort's parents?",options:["Merope Gaunt and Tom Riddle Senior","Morfin Gaunt and Hepzibah Smith","Marvolo Gaunt and a Muggle woman","Eileen Prince and Tobias Snape"],answer:0,explanation:"Merope, Slytherin's descendant, used a love potion on a wealthy Muggle who abandoned her."},
+{id:"hb-017",book:6,difficulty:"hard",category:"Objects",question:"Whom did Voldemort murder to obtain Hufflepuff's cup and Slytherin's locket?",options:["Hepzibah Smith","Hokey the house-elf","Bathilda Bagshot","Mrs Cole"],answer:0,explanation:"He framed her house-elf Hokey for the poisoning."},
+{id:"hb-018",book:6,difficulty:"hard",category:"Spells & Potions",question:"What is the Unbreakable Vow Snape makes with Narcissa Malfoy?",options:["To protect Draco and complete his task if he fails","To keep Draco's task secret from Dumbledore","To kill Harry Potter","To deliver Draco to Voldemort"],answer:0,explanation:"Bellatrix acts as Bonder; breaking such a vow means death."},
+{id:"hb-019",book:6,difficulty:"hard",category:"Plot",question:"Which memory does Harry obtain from Slughorn using Felix Felicis?",options:["Slughorn telling Riddle about Horcruxes","Slughorn teaching Lily potions","Slughorn meeting Dumbledore","Slughorn hiding from Death Eaters"],answer:0,explanation:"Slughorn had doctored the memory out of shame; the real one names seven."},
+{id:"hb-020",book:6,difficulty:"hard",category:"Creatures",question:"What guards the locket in the cave's lake?",options:["Inferi","Grindylows","A basilisk","Dementors"],answer:0,explanation:"Inferi — corpses bewitched to do a Dark wizard's bidding; Dumbledore drives them off with fire."},
+{id:"hb-021",book:6,difficulty:"hard",category:"Plot",question:"How is Ron poisoned?",options:["By mead intended for Dumbledore","By a cursed necklace","By an Acid Pop","By Romilda Vane's chocolates"],answer:0,explanation:"Slughorn's oak-matured mead; Harry saves him with a bezoar."},
+
+/* ---------- Book 7 · Deathly Hallows ---------- */
+{id:"dh-001",book:7,difficulty:"easy",category:"Objects",question:"What are the three Deathly Hallows?",options:["The Elder Wand, the Resurrection Stone, the Cloak of Invisibility","The Sword, the Cup, the Diadem","The Wand, the Locket, the Cloak","The Mirror, the Stone, the Cloak"],answer:0,explanation:"Together they are said to make the possessor Master of Death."},
+{id:"dh-002",book:7,difficulty:"easy",category:"Characters",question:"Who kills Bellatrix Lestrange?",options:["Molly Weasley","Ginny Weasley","Neville Longbottom","Minerva McGonagall"],answer:0,explanation:"'Not my daughter, you bitch!' — after Bellatrix aims at Ginny."},
+{id:"dh-003",book:7,difficulty:"easy",category:"Characters",question:"Who destroys Nagini?",options:["Neville Longbottom","Ron Weasley","Harry Potter","Hermione Granger"],answer:0,explanation:"With the sword of Gryffindor, pulled from the Sorting Hat."},
+{id:"dh-004",book:7,difficulty:"easy",category:"Places",question:"Where do Harry's parents lie buried?",options:["Godric's Hollow","Hogsmeade","Little Hangleton","Ottery St Catchpole"],answer:0,explanation:"Harry and Hermione visit the graveyard on Christmas Eve."},
+{id:"dh-005",book:7,difficulty:"easy",category:"Characters",question:"Who dies rescuing Harry and the others from Malfoy Manor?",options:["Dobby","Kreacher","Griphook","Mundungus Fletcher"],answer:0,explanation:"Bellatrix's thrown knife strikes him as he Disapparates; Harry digs his grave by hand."},
+{id:"dh-006",book:7,difficulty:"easy",category:"Plot",question:"What is the objective of Harry, Ron and Hermione's year away from Hogwarts?",options:["To find and destroy the remaining Horcruxes","To reach the Ministry and overthrow it","To gather the Order abroad","To locate the Deathly Hallows"],answer:0,explanation:"Dumbledore left them the task, with only hints as to what the Horcruxes were."},
+{id:"dh-007",book:7,difficulty:"medium",category:"Objects",question:"What does Dumbledore leave Hermione in his will?",options:["The Tales of Beedle the Bard","His Deluminator","The Snitch Harry caught in his first match","A vial of memories"],answer:0,explanation:"The runes contain the Tale of the Three Brothers and the Hallows symbol."},
+{id:"dh-008",book:7,difficulty:"medium",category:"Objects",question:"What does Dumbledore leave Ron?",options:["The Deluminator","The sword of Gryffindor","A book of tales","A gold watch"],answer:0,explanation:"It carries Hermione's voice and guides Ron back to them after he leaves."},
+{id:"dh-009",book:7,difficulty:"medium",category:"Objects",question:"What is hidden inside the Snitch Dumbledore leaves Harry?",options:["The Resurrection Stone","A fragment of the Elder Wand","A vial of Felix Felicis","A letter from Lily"],answer:0,explanation:"'I open at the close' — Harry opens it on the way to his death in the Forest."},
+{id:"dh-010",book:7,difficulty:"medium",category:"Spells & Potions",question:"What word is made Taboo by the Ministry, breaking protective enchantments?",options:["'Voldemort'","'Potter'","'Dumbledore'","'Horcrux'"],answer:0,explanation:"Speaking the name summons Snatchers — how the three are caught."},
+{id:"dh-011",book:7,difficulty:"medium",category:"Characters",question:"What form does Snape's Patronus take, and why?",options:["A doe, matching Lily's","A stag, matching James's","A phoenix, matching Dumbledore's","A wolf, matching Lupin's"],answer:0,explanation:"'After all this time?' 'Always.'"},
+{id:"dh-012",book:7,difficulty:"medium",category:"Places",question:"Which vault do Harry, Ron and Hermione break into at Gringotts?",options:["The Lestrange vault","The Malfoy vault","The Black vault","Vault 713"],answer:0,explanation:"To retrieve Hufflepuff's cup, guarded by Gemino and Flagrante curses."},
+{id:"dh-013",book:7,difficulty:"medium",category:"Objects",question:"Where was Ravenclaw's diadem hidden?",options:["In the Room of Requirement","In Ravenclaw Tower","In the Forbidden Forest","In Gringotts"],answer:0,explanation:"In the Room of Hidden Things; it is destroyed by Crabbe's Fiendfyre."},
+{id:"dh-014",book:7,difficulty:"medium",category:"Characters",question:"Who is the Ministry's Minister for Magic when the book opens?",options:["Rufus Scrimgeour","Pius Thicknesse","Cornelius Fudge","Kingsley Shacklebolt"],answer:0,explanation:"Scrimgeour is killed and replaced by the Imperiused Thicknesse."},
+{id:"dh-015",book:7,difficulty:"hard",category:"Plot",question:"Who was the true master of the Elder Wand at the time of Dumbledore's death?",options:["Draco Malfoy","Severus Snape","Albus Dumbledore","Lord Voldemort"],answer:0,explanation:"Draco disarmed Dumbledore on the tower, so the wand's allegiance passed to him — and later to Harry."},
+{id:"dh-016",book:7,difficulty:"hard",category:"Plot",question:"Why did Harry survive the Killing Curse in the Forbidden Forest?",options:["Voldemort's use of Harry's blood tethered Harry to life","The Resurrection Stone shielded him","His mother's charm still held","Snape had cast a counter-curse"],answer:0,explanation:"Lily's protection lived on in Voldemort's own body, and only the Horcrux fragment died."},
+{id:"dh-017",book:7,difficulty:"hard",category:"Characters",question:"What is the name of Dumbledore's sister, and what became of her?",options:["Ariana, killed in a three-way duel","Ariana, who married a Muggle","Kendra, who died of illness","Bathilda, who moved abroad"],answer:0,explanation:"She died in the duel between Albus, Aberforth and Grindelwald; nobody knows whose curse."},
+{id:"dh-018",book:7,difficulty:"hard",category:"Characters",question:"Who does Kreacher reveal took the real locket Horcrux from the cave?",options:["Regulus Arcturus Black","Sirius Black","Mundungus Fletcher","Dolores Umbridge"],answer:0,explanation:"Regulus ordered Kreacher to destroy it and drank the potion himself."},
+{id:"dh-019",book:7,difficulty:"hard",category:"Plot",question:"In the epilogue, what are the names of Harry and Ginny's three children?",options:["James Sirius, Albus Severus, Lily Luna","James Remus, Albus Severus, Lily Molly","Sirius James, Severus Albus, Luna Lily","James Arthur, Albus Remus, Lily Luna"],answer:0,explanation:"'Albus Severus, you were named for two headmasters of Hogwarts.'"},
+{id:"dh-020",book:7,difficulty:"hard",category:"Creatures",question:"Whose murder did Voldemort use to create the Horcrux in Nagini?",options:["Bertha Jorkins","Frank Bryce","Charity Burbage","Regulus Black"],answer:0,explanation:"Dumbledore believed Nagini was made a Horcrux after Bertha Jorkins's murder in Albania."},
+{id:"dh-021",book:7,difficulty:"hard",category:"Objects",question:"How is Slytherin's locket finally destroyed?",options:["Ron stabs it with the sword of Gryffindor","Hermione uses Fiendfyre","Harry uses a basilisk fang","Neville crushes it"],answer:0,explanation:"Harry opens it in Parseltongue; Ron, having just returned, destroys it after facing its taunts."},
+{id:"dh-022",book:7,difficulty:"hard",category:"Places",question:"Where does Harry meet Dumbledore after Voldemort's curse strikes him?",options:["A version of King's Cross station","The Great Hall","Godric's Hollow","The Room of Requirement"],answer:0,explanation:"'This is, as they say, your party.' Harry chooses to go back."},
+{id:"dh-023",book:7,difficulty:"medium",category:"Characters",question:"Which two Order members are married during the course of Deathly Hallows and later die at Hogwarts?",options:["Remus Lupin and Nymphadora Tonks","Arthur and Molly Weasley","Bill Weasley and Fleur Delacour","Kingsley Shacklebolt and Hestia Jones"],answer:0,explanation:"They leave behind their son Teddy, whose godfather is Harry."},
+{id:"dh-024",book:7,difficulty:"medium",category:"Characters",question:"Which Weasley dies in the Battle of Hogwarts?",options:["Fred","George","Percy","Charlie"],answer:0,explanation:"Fred is killed in an explosion beside Percy, mid-laugh."},
+
+];
+
+/* ============================================================
+   2. CONFIG / CONSTANTS
+   ============================================================ */
+const WEIGHT = { easy:1, medium:2, hard:3 };
+const BOOK_NAMES = {
+  1:"Philosopher's Stone", 2:"Chamber of Secrets", 3:"Prisoner of Azkaban",
+  4:"Goblet of Fire", 5:"Order of the Phoenix", 6:"Half-Blood Prince",
+  7:"Deathly Hallows"
+};
+const STORE_KEY = "hp-quiz-v1";
+
+/* Performance tiers -> house-flavoured messages. */
+const TIERS = [
+  { min:100, msg:"Outstanding. Dumbledore would award your house the Cup on the spot." },
+  { min:90,  msg:"Gryffindor-worthy! Fifty points for sheer nerve and scholarship." },
+  { min:75,  msg:"Exceeds Expectations — Professor McGonagall permits herself a small smile." },
+  { min:60,  msg:"Acceptable. You'd scrape an O.W.L., but Snape is unimpressed." },
+  { min:40,  msg:"Poor. Perhaps skim the set books before your next attempt." },
+  { min:0,   msg:"Troll. Back to Potions class with you." }
+];
+
+/* ============================================================
+   3. PURE LOGIC (no DOM here)
+   ============================================================ */
+
+/** Fisher-Yates shuffle on a copy — genuinely varied every run. */
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** Filter the bank by book / difficulty / category. */
+function filterPool({ book, difficulty, category }){
+  return QUESTIONS.filter(q =>
+    (book === "all" || q.book === Number(book)) &&
+    (difficulty === "mixed" || q.difficulty === difficulty) &&
+    (category === "all" || q.category === category)
+  );
+}
+
+/**
+ * Draw `n` distinct questions from the pool, each with its options
+ * shuffled. Returns objects carrying the shuffled option order plus
+ * the relocated correct index.
+ */
+function drawQuiz(pool, n){
+  return shuffle(pool).slice(0, n).map(q => {
+    const correctValue = q.options[q.answer];
+    const options = shuffle(q.options);
+    return { ...q, options, answer: options.indexOf(correctValue) };
+  });
+}
+
+/** Score a finished run. Pure: takes questions + given answers. */
+function scoreRun(questions, given){
+  const res = {
+    correct:0, total:questions.length, points:0, maxPoints:0,
+    bestStreak:0, byDiff:{}, byBook:{}, byCat:{}
+  };
+  let streak = 0;
+  questions.forEach((q, i) => {
+    const w = WEIGHT[q.difficulty];
+    const ok = given[i] === q.answer;
+    res.maxPoints += w;
+    if (ok){ res.correct++; res.points += w; streak++; res.bestStreak = Math.max(res.bestStreak, streak); }
+    else streak = 0;
+    for (const [map, key] of [[res.byDiff,q.difficulty],[res.byBook,q.book],[res.byCat,q.category]]){
+      map[key] = map[key] || { correct:0, total:0 };
+      map[key].total++; if (ok) map[key].correct++;
+    }
+  });
+  res.pct = res.maxPoints ? Math.round(res.points / res.maxPoints * 100) : 0;
+  return res;
+}
+
+function tierMessage(pct){ return TIERS.find(t => pct >= t.min).msg; }
+
+/* --- persistence --- */
+function loadStore(){
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
+  catch { return {}; }
+}
+function saveStore(o){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(o)); } catch {}
+}
+
+/* ============================================================
+   4. APP STATE + RENDERING
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const state = {
+  questions:[], given:[], index:0, settings:null,
+  answered:false, startTime:0, timerId:null, pool:[]
+};
+
+/* ---------- theme ---------- */
+(function initTheme(){
+  const s = loadStore();
+  if (s.theme) document.documentElement.dataset.theme = s.theme;
+  syncThemeIcon();
+})();
+function syncThemeIcon(){
+  $("themeToggle").textContent =
+    document.documentElement.dataset.theme === "dark" ? "☾" : "☀";
+}
+$("themeToggle").addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  syncThemeIcon();
+  saveStore({ ...loadStore(), theme: next });
+});
+
+/* ---------- sound (WebAudio, no files) ---------- */
+let audioCtx = null;
+function beep(ok){
+  if (!$("optSound").checked) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = "sine";
+    o.frequency.value = ok ? 880 : 220;
+    g.gain.setValueAtTime(.12, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .28);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + .3);
+  } catch {}
+}
+
+/* ---------- start screen ---------- */
+function populateCategories(){
+  const cats = [...new Set(QUESTIONS.map(q => q.category))].sort();
+  const sel = $("selCat");
+  cats.forEach(c => sel.add(new Option(c, c)));
+}
+function readSettings(){
+  return {
+    book: $("selBook").value,
+    difficulty: $("selDiff").value,
+    category: $("selCat").value,
+    count: Math.max(1, Math.min(50, parseInt($("selCount").value, 10) || 10)),
+    feedback: $("optFeedback").checked,
+    timer: $("optTimer").checked,
+    endless: $("optEndless").checked
+  };
+}
+function updatePoolInfo(){
+  const s = readSettings();
+  const pool = filterPool(s);
+  const err = $("startErr");
+  if (pool.length === 0){
+    err.textContent = "No questions match those filters. Widen the book, difficulty, or category.";
+    err.classList.remove("hidden");
+    $("btnStart").disabled = true;
+    $("poolInfo").textContent = "";
+  } else {
+    err.classList.add("hidden");
+    $("btnStart").disabled = false;
+    let msg = pool.length + " question" + (pool.length === 1 ? "" : "s") + " match your filters";
+    if (s.endless) msg += " · endless mode will keep serving them until you miss one.";
+    else if (pool.length < s.count) msg += " — capped from " + s.count + " to " + pool.length + " for this run.";
+    else msg += ".";
+    $("poolInfo").textContent = msg;
+  }
+  showBest();
+}
+function showBest(){
+  const best = loadStore().best;
+  $("bestBox").textContent = best
+    ? "Personal best: " + best.points + " pts (" + best.pct + "%) over " + best.total + " questions."
+    : "No personal best recorded yet.";
+}
+["selBook","selDiff","selCat","selCount","optEndless"].forEach(id =>
+  $(id).addEventListener("change", updatePoolInfo));
+$("btnRules").addEventListener("click", () => $("rules").classList.toggle("hidden"));
+
+/* ---------- screen switching ---------- */
+function show(which){
+  ["startScreen","quizCard","resultCard"].forEach(id =>
+    $(id).classList.toggle("hidden", id !== which));
+}
+
+/* ---------- quiz ---------- */
+function startQuiz(){
+  const s = readSettings();
+  const pool = filterPool(s);
+  if (!pool.length) return updatePoolInfo();
+
+  state.settings = s;
+  state.pool = pool;
+  // Endless mode draws the whole (shuffled) pool; the run ends on the first miss.
+  state.questions = drawQuiz(pool, s.endless ? pool.length : Math.min(s.count, pool.length));
+  state.given = [];
+  state.index = 0;
+  state.startTime = Date.now();
+
+  show("quizCard");
+  startTimer();
+  renderQuestion();
+}
+
+function startTimer(){
+  clearInterval(state.timerId);
+  if (!state.settings.timer){ $("statusLabel").textContent = ""; return; }
+  const tick = () => {
+    const s = Math.floor((Date.now() - state.startTime) / 1000);
+    $("statusLabel").textContent =
+      String(Math.floor(s / 60)).padStart(2,"0") + ":" + String(s % 60).padStart(2,"0");
+  };
+  tick();
+  state.timerId = setInterval(tick, 1000);
+}
+
+function renderQuestion(){
+  const q = state.questions[state.index];
+  state.answered = false;
+
+  const totalLabel = state.settings.endless ? "∞" : state.questions.length;
+  $("progressLabel").textContent = "Question " + (state.index + 1) + " of " + totalLabel;
+  $("progressBar").style.width =
+    (state.settings.endless ? 0 : state.index / state.questions.length * 100) + "%";
+
+  $("qTags").innerHTML =
+    '<span class="tag">Book ' + q.book + ' · ' + BOOK_NAMES[q.book] + '</span>' +
+    '<span class="tag ' + q.difficulty + '">' + q.difficulty + ' · ' + WEIGHT[q.difficulty] + ' pt' + (WEIGHT[q.difficulty] > 1 ? 's' : '') + '</span>' +
+    '<span class="tag">' + q.category + '</span>';
+  $("qText").textContent = q.question;
+
+  const list = $("qOpts");
+  list.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.className = "opt";
+    btn.type = "button";
+    btn.dataset.i = i;
+    btn.setAttribute("role", "option");
+    btn.setAttribute("aria-label", "Option " + (i + 1) + ": " + opt);
+    btn.innerHTML = '<span class="key" aria-hidden="true">' + (i + 1) + '</span><span>' + escapeHtml(opt) + '</span>';
+    btn.addEventListener("click", () => answer(i));
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+
+  $("feedback").classList.add("hidden");
+  $("btnNext").classList.add("hidden");
+  const first = list.querySelector(".opt");
+  if (first) first.focus();
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+function answer(choice){
+  if (state.answered) return;
+  state.answered = true;
+  state.given[state.index] = choice;
+
+  const q = state.questions[state.index];
+  const ok = choice === q.answer;
+  beep(ok);
+
+  const btns = [...$("qOpts").querySelectorAll(".opt")];
+  btns.forEach(b => { b.disabled = true; b.setAttribute("aria-disabled","true"); });
+  btns[choice].classList.add("chosen", ok ? "correct" : "wrong");
+
+  if (state.settings.feedback){
+    btns[q.answer].classList.add("correct");
+    const fb = $("feedback");
+    fb.innerHTML = "<b>" + (ok ? "Correct." : "Not quite.") + "</b> " +
+      (ok ? "" : "The answer is <b>" + escapeHtml(q.options[q.answer]) + "</b>. ") +
+      escapeHtml(q.explanation);
+    fb.classList.remove("hidden");
+  }
+
+  // Endless mode: a wrong answer ends the run immediately.
+  if (state.settings.endless && !ok){
+    state.questions = state.questions.slice(0, state.index + 1);
+    $("btnNext").textContent = "See results →";
+    $("btnNext").classList.remove("hidden");
+    $("btnNext").focus();
+    return;
+  }
+
+  const last = state.index === state.questions.length - 1;
+  $("btnNext").textContent = last ? "See results →" : "Next →";
+  $("btnNext").classList.remove("hidden");
+  if (!state.settings.feedback) nextQuestion();   // exam mode: no pause
+  else $("btnNext").focus();
+}
+
+function nextQuestion(){
+  if (state.index >= state.questions.length - 1) return finish();
+  state.index++;
+  renderQuestion();
+}
+
+function finish(){
+  clearInterval(state.timerId);
+  const res = scoreRun(state.questions, state.given);
+  res.seconds = Math.floor((Date.now() - state.startTime) / 1000);
+  renderResults(res);
+  show("resultCard");
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+/* ---------- results ---------- */
+function renderResults(res){
+  $("resScore").textContent = res.points + " / " + res.maxPoints;
+  $("resSub").textContent =
+    res.correct + " of " + res.total + " correct · " + res.pct + "% weighted score";
+  $("resMsg").textContent = tierMessage(res.pct);
+
+  // Personal best (weighted points, tie-broken by percentage).
+  const store = loadStore();
+  const best = store.best;
+  const isRecord = !best || res.points > best.points ||
+                   (res.points === best.points && res.pct > best.pct);
+  $("resRecord").innerHTML = isRecord && res.total > 0
+    ? '<span class="record">★ New personal best!</span>' : "";
+  if (isRecord){
+    saveStore({ ...store, best:{ points:res.points, pct:res.pct, total:res.total } });
+  }
+
+  const mm = String(Math.floor(res.seconds / 60)).padStart(2,"0") + ":" +
+             String(res.seconds % 60).padStart(2,"0");
+  $("resStats").innerHTML = [
+    ["Correct", res.correct + "/" + res.total],
+    ["Best streak", res.bestStreak],
+    ["Weighted", res.pct + "%"],
+    ["Time", mm]
+  ].map(([k,v]) => '<div class="stat"><b>' + v + '</b><span>' + k + '</span></div>').join("");
+
+  renderTable("tblDiff", res.byDiff, k => k[0].toUpperCase() + k.slice(1), ["easy","medium","hard"]);
+  renderTable("tblBook", res.byBook, k => "Book " + k + " · " + BOOK_NAMES[k]);
+  renderTable("tblCat",  res.byCat,  k => k);
+  renderReview();
+}
+
+function renderTable(id, map, label, order){
+  const keys = order
+    ? order.filter(k => map[k])
+    : Object.keys(map).sort((a,b) => String(a).localeCompare(String(b), undefined, { numeric:true }));
+  if (!keys.length){ $(id).innerHTML = '<tr><td>No data.</td></tr>'; return; }
+  $(id).innerHTML =
+    '<tr><th>Group</th><th class="num">Correct</th><th class="num">%</th></tr>' +
+    keys.map(k => {
+      const d = map[k], pct = Math.round(d.correct / d.total * 100);
+      return '<tr><td>' + escapeHtml(label(k)) + '</td><td class="num">' +
+             d.correct + '/' + d.total + '</td><td class="num">' + pct + '%</td></tr>';
+    }).join("");
+}
+
+function renderReview(){
+  $("reviewList").innerHTML = state.questions.map((q, i) => {
+    const given = state.given[i];
+    const ok = given === q.answer;
+    const yours = given == null ? "(not answered)" : q.options[given];
+    return '<div class="review-item ' + (ok ? "ok" : "no") + '">' +
+      '<p class="review-q">' + (i + 1) + '. ' + escapeHtml(q.question) + '</p>' +
+      '<p>Your answer: <b>' + escapeHtml(yours) + '</b> ' + (ok ? "✔" : "✘") + '</p>' +
+      (ok ? "" : '<p>Correct answer: <b>' + escapeHtml(q.options[q.answer]) + '</b></p>') +
+      '<p class="exp">' + escapeHtml(q.explanation) + '</p>' +
+      '<p class="exp">Book ' + q.book + " · " + escapeHtml(q.difficulty) + " · " + escapeHtml(q.category) + '</p>' +
+    '</div>';
+  }).join("");
+}
+
+/* ---------- share ---------- */
+$("btnShare").addEventListener("click", async () => {
+  const res = scoreRun(state.questions, state.given);
+  const text = "The Hogwarts Examination — " + res.correct + "/" + res.total +
+    " correct, " + res.points + "/" + res.maxPoints + " points (" + res.pct + "%). " +
+    tierMessage(res.pct);
+  try {
+    await navigator.clipboard.writeText(text);
+    $("btnShare").textContent = "Copied ✔";
+  } catch {
+    $("btnShare").textContent = "Copy failed";
+  }
+  setTimeout(() => { $("btnShare").textContent = "Copy result"; }, 1800);
+});
+
+/* ---------- buttons + keyboard ---------- */
+$("btnStart").addEventListener("click", startQuiz);
+$("btnNext").addEventListener("click", nextQuestion);
+$("btnQuit").addEventListener("click", () => {
+  clearInterval(state.timerId);
+  // Trim to what was actually attempted so the score reflects the real run.
+  state.questions = state.questions.slice(0, state.given.length || 0);
+  if (state.questions.length) finish(); else { show("startScreen"); updatePoolInfo(); }
+});
+$("btnAgain").addEventListener("click", startQuiz);   // fresh random draw, no reload
+$("btnHome").addEventListener("click", () => { show("startScreen"); updatePoolInfo(); });
+
+document.addEventListener("keydown", e => {
+  if ($("quizCard").classList.contains("hidden")) return;
+  const btns = [...$("qOpts").querySelectorAll(".opt")];
+
+  if (/^[1-4]$/.test(e.key)){
+    const i = Number(e.key) - 1;
+    if (btns[i] && !state.answered){ e.preventDefault(); answer(i); }
+    return;
+  }
+  if ((e.key === "Enter" || e.key === "ArrowRight") && state.answered &&
+      !$("btnNext").classList.contains("hidden")){
+    e.preventDefault(); nextQuestion(); return;
+  }
+  if (e.key === "ArrowDown" || e.key === "ArrowUp"){
+    if (state.answered) return;
+    e.preventDefault();
+    const cur = btns.indexOf(document.activeElement);
+    const step = e.key === "ArrowDown" ? 1 : -1;
+    const next = (cur + step + btns.length) % btns.length;
+    btns[next < 0 ? 0 : next].focus();
+  }
+});
+
+/* ---------- boot ---------- */
+populateCategories();
+updatePoolInfo();
+console.log("Question bank loaded:", QUESTIONS.length, "questions.");
+</script>
+</body>
+</html>

@@ -1,0 +1,609 @@
+# -*- coding: utf-8 -*-
+"""Builds the 'How to Learn SQL in the AI Era' LinkedIn carousel HTML (1080x1350, 10 slides)."""
+import html, re, io, os
+
+KEYWORDS = r"""SELECT|FROM|WHERE|GROUP\s+BY|ORDER\s+BY|LIMIT|AND|OR|NOT|IN|AS|CASE|WHEN|THEN|ELSE|END|DISTINCT|DESC|ASC"""
+FUNCS = r"""COUNT|SUM|AVG|MAX|MIN"""
+
+
+def highlight(code_src):
+    out = []
+    for line in code_src.split("\n"):
+        m = re.search(r"--.*$", line)
+        comment = ""
+        if m:
+            comment = line[m.start():]
+            line = line[:m.start()]
+        s = html.escape(line, quote=False)
+        s = re.sub(r"('[^']*')", r'<span class="s">\1</span>', s)
+        s = re.sub(r"\b(" + FUNCS + r")\b(?![^<]*</span>)", r'<span class="f">\1</span>', s)
+        s = re.sub(r"\b(" + KEYWORDS + r")\b(?![^<]*</span>)", r'<span class="k">\1</span>', s)
+        s = re.sub(r"(?<![\w.#])(\d+\.\d+|\d+)(?![\w<])(?![^<]*</span>)", r'<span class="n">\1</span>', s)
+        if comment:
+            s += '<span class="c">' + html.escape(comment, quote=False) + "</span>"
+        out.append(s)
+    return "\n".join(out)
+
+
+def code(src, cls="", label=""):
+    lab = '<div class="codelabel">%s</div>' % label if label else ""
+    return '<div class="codewrap">%s<pre class="code %s">%s</pre></div>' % (lab, cls, highlight(src.strip("\n")))
+
+
+def icode(src):
+    return '<pre class="code inl">%s</pre>' % highlight(src.strip("\n"))
+
+
+TUTOR = """<div class="tutor">
+  <div class="tutor-h"><span class="tutor-badge">COPY &amp; REUSE</span><b>The AI tutor prompt</b></div>
+<pre class="tutor-p">Act as my SQL tutor. Do not give me the final query immediately.
+First ask me what one row represents, what tables I need,
+what output I expect, and what edge cases could change the result.
+Then give me hints one step at a time.</pre>
+</div>"""
+
+S = []
+
+# ---------------------------------------------------------------- 01 cover
+S.append(('cover', """
+<div class="eyebrow light">HOW TO LEARN SQL IN THE AI ERA &middot; WITHOUT LETTING AI DO THE LEARNING</div>
+<h1 class="cover-title">AI Can Write SQL.<br><span class="hl">But Can You Tell<br>If It Is Right?</span></h1>
+<p class="cover-sub">A practical SQL learning system for the AI era.</p>
+
+<div class="habits">
+  <div class="hb"><i>1</i><b>Interview</b><span>the data first</span></div>
+  <div class="hb-a">&rarr;</div>
+  <div class="hb"><i>2</i><b>Predict</b><span>before you run</span></div>
+  <div class="hb-a">&rarr;</div>
+  <div class="hb"><i>3</i><b>Layer</b><span>one step at a time</span></div>
+  <div class="hb-a">&rarr;</div>
+  <div class="hb"><i>4</i><b>Challenge</b><span>with counterexamples</span></div>
+  <div class="hb-a">&rarr;</div>
+  <div class="hb"><i>5</i><b>Explain</b><span>in your own words</span></div>
+</div>
+<div class="dialog">
+  <div class="bub ai"><span class="who">AI</span><p>&ldquo;Here&rsquo;s your query. It runs.&rdquo;</p></div>
+  <div class="bub you"><span class="who">YOU</span><p>&ldquo;Before I use it: why does it work, and what data would make it wrong?&rdquo;</p></div>
+</div>
+<div class="cover-loop">&#8634;&nbsp; AI plays tutor, reviewer and challenger &mdash; <b>you do the thinking</b></div>
+
+<div class="cover-foot">
+  <div class="rule"></div>
+  <div class="cover-by">Sagar Rathkanthiwar<span>Data &amp; AI Professional</span></div>
+  <div class="cover-meta">10 slides &middot; save for your next practice session &rarr;</div>
+</div>
+"""))
+
+# ---------------------------------------------------------------- 02 mindset
+S.append(('std', """
+<div class="eyebrow">01 &middot; THE MINDSET SHIFT</div>
+<h2>Reading AI&rsquo;s SQL feels like learning. It isn&rsquo;t.</h2>
+<p class="lead">You don&rsquo;t need to memorize every function &mdash; AI can look those up. Measure progress by what you can reason through <b>with the chat closed</b>:</p>
+<div class="chain">
+  <div class="ch"><b>Question</b><span>Can I restate exactly what&rsquo;s being asked?</span></div>
+  <div class="ch-a">&rarr;</div>
+  <div class="ch"><b>Data shape</b><span>Do I know what&rsquo;s in the table I&rsquo;m using?</span></div>
+  <div class="ch-a">&rarr;</div>
+  <div class="ch"><b>Logic</b><span>Can I say what each step does to the rows?</span></div>
+  <div class="ch-a">&rarr;</div>
+  <div class="ch"><b>Result</b><span>Could I predict it &mdash; and spot when it&rsquo;s off?</span></div>
+</div>
+<div class="vs">
+  <div class="vs-old">
+    <div class="vs-h">FEELS LIKE LEARNING &middot; RECOGNITION</div>
+    <ul><li>Reading AI&rsquo;s query and nodding along</li><li>Re-prompting until it runs</li><li>Copying it into the dashboard</li><li>Saving it &ldquo;for later&rdquo;</li></ul>
+    <div class="vs-foot">Familiar when you see it. Gone when you need it.</div>
+  </div>
+  <div class="vs-new">
+    <div class="vs-h">ACTUALLY LEARNING &middot; RETRIEVAL</div>
+    <ul><li>Writing a first attempt before asking</li><li>Predicting the output before running</li><li>Explaining it without looking</li><li>Finding the input that breaks it</li></ul>
+    <div class="vs-foot">Effortful now. Yours for good.</div>
+  </div>
+</div>
+<div class="flag t"><b>Change the question you ask after each session:</b> not &ldquo;Did I get an answer?&rdquo; but &ldquo;Could I get it again tomorrow, without AI?&rdquo;</div>
+<p class="kicker"><b>Self-test:</b> close the chat and rebuild yesterday&rsquo;s AI query from memory. <b>Whatever you can&rsquo;t rebuild, you haven&rsquo;t learned yet</b> &mdash; that&rsquo;s your next practice session.</p>
+"""))
+
+# ---------------------------------------------------------------- 03 learn the data
+S.append(('std', """
+<div class="eyebrow">02 &middot; LEARN THE DATA BEFORE THE QUERY</div>
+<h2>Interview the table before you ask it a question</h2>
+<div class="steps4">
+  <div class="s4"><i>1</i><b>Guess each column</b><span>Write down what you think it means.</span></div>
+  <div class="s4"><i>2</i><b>Check the values</b><span>Which values exist? What range?</span></div>
+  <div class="s4"><i>3</i><b>Log 3 surprises</b><span>Anything that doesn&rsquo;t match your guess.</span></div>
+  <div class="s4"><i>4</i><b>Take them to AI</b><span>Ask why &mdash; not for a query.</span></div>
+</div>
+<div class="twocol">
+  <div class="colstack">
+""" + code("""
+-- Which values actually exist?
+SELECT DISTINCT status
+FROM orders;
+
+SELECT DISTINCT region
+FROM orders;
+
+-- What range do amounts cover?
+SELECT MIN(amount) AS low,
+       MAX(amount) AS high,
+       AVG(amount) AS typical
+FROM orders;
+""", cls="sm", label="THREE QUICK QUESTIONS FOR THE DATA") + """
+  </div>
+  <div class="survey">
+    <div class="sv-h">MY SURPRISE LOG &middot; orders</div>
+    <div class="sv-r"><b>status</b><span>Guessed 3 values. Found 5 &mdash; including <span class="mono">test</span> and <span class="mono">Shipped</span> with a capital S.</span></div>
+    <div class="sv-r"><b>region</b><span>Both <span class="mono">EU</span> and <span class="mono">Europe</span> appear. Same place?</span></div>
+    <div class="sv-r"><b>amount</b><span>Max is 99,999 in 40 rows. A real order &mdash; or a placeholder?</span></div>
+  </div>
+</div>
+<div class="fill">
+  <div class="fill-h">THE QUESTION THAT TEACHES</div>
+  <p>&ldquo;Why might <u>amount</u> be exactly <u>99,999</u> in 40 rows, and how should I treat those rows for a <u>revenue</u> question?&rdquo;</p>
+</div>
+<p class="kicker">Every surprise is a <b>wrong number you avoided</b> &mdash; and a lesson about your data that no generated query would have taught you.</p>
+"""))
+
+# ---------------------------------------------------------------- 04 explain not generate
+S.append(('std', """
+<div class="eyebrow">03 &middot; USE AI TO EXPLAIN, NOT JUST GENERATE</div>
+<h2>Same assistant. Very different prompts.</h2>
+<div class="contrast">
+  <div class="ct-bad"><div class="ct-h">COPY-PASTE ENGINE</div><p>&ldquo;Write a query that shows revenue by region.&rdquo;</p><span>You get an answer. You learn nothing about <i>why</i> it works.</span></div>
+  <div class="ct-good"><div class="ct-h">TUTOR</div><p>&ldquo;Here&rsquo;s my attempt. Where is my thinking off?&rdquo;</p><span>You get a lesson you can reuse on the next query.</span></div>
+</div>
+<div class="prompts">
+  <div class="pr"><div class="pr-n">1</div><div><b>&ldquo;Explain this query line by line.&rdquo;</b><span>Map each clause to what it does to the rows.</span></div></div>
+  <div class="pr"><div class="pr-n">2</div><div><b>&ldquo;What would you have asked me before writing this?&rdquo;</b><span>Surfaces the questions you should be asking yourself.</span></div></div>
+  <div class="pr"><div class="pr-n">3</div><div><b>&ldquo;Show me the smallest possible example table.&rdquo;</b><span>4&ndash;6 rows that make the query&rsquo;s behavior visible.</span></div></div>
+  <div class="pr"><div class="pr-n">4</div><div><b>&ldquo;Which line changes the result most if I delete it?&rdquo;</b><span>Finds the load-bearing logic fast.</span></div></div>
+  <div class="pr"><div class="pr-n">5</div><div><b>&ldquo;Now quiz me with one question about it.&rdquo;</b><span>Turns passive reading into active recall.</span></div></div>
+</div>
+<div class="flag t"><b>Give AI context, get better lessons:</b> paste the business question, the query, and 5 sample rows &mdash; not just the SQL on its own.</div>
+<p class="kicker">Rule of thumb: <b>for every query AI writes, ask it at least one &ldquo;why&rdquo; question</b> before you use the result.</p>
+"""))
+
+# ---------------------------------------------------------------- 05 predict
+S.append(('std', """
+<div class="eyebrow">04 &middot; PREDICT BEFORE YOU RUN</div>
+<h2>Guess the output first. Then let the database grade you.</h2>
+<div class="twocol top">
+  <div>
+    <div class="cardlabel">SAMPLE TABLE &middot; orders</div>
+    <table class="tbl">
+      <tr><th>order_id</th><th>customer</th><th>status</th><th>amount</th></tr>
+      <tr><td>1</td><td>Ana</td><td>shipped</td><td>40</td></tr>
+      <tr><td>2</td><td>Ana</td><td>cancelled</td><td>25</td></tr>
+      <tr><td>3</td><td>Ben</td><td>shipped</td><td>60</td></tr>
+      <tr><td>4</td><td>Cy</td><td>pending</td><td>30</td></tr>
+      <tr><td>5</td><td>Ben</td><td>shipped</td><td>15</td></tr>
+    </table>
+  </div>
+  <div>
+""" + code("""
+SELECT customer,
+       SUM(amount) AS total
+FROM orders
+WHERE status = 'shipped'
+GROUP BY customer;
+""", label="THE QUERY") + """
+    <div class="guess">
+      <div class="g-h">YOUR PREDICTION</div>
+      <div class="g-q">How many rows? &nbsp;____</div>
+      <div class="g-q">Which customers? &nbsp;____</div>
+      <div class="g-q">What totals? &nbsp;____</div>
+    </div>
+  </div>
+</div>
+<div class="reveal">
+  <div class="rv-h">THE ANSWER</div>
+  <div class="rv-b"><span class="rv-row">Ana &middot; 40</span><span class="rv-row">Ben &middot; 75</span><span class="rv-sur">Cy is gone &mdash; the filter removed her only order before grouping.</span></div>
+</div>
+<div class="grade"><b>Grade yourself:</b><span class="g1">&#10003; Exact match</span><span class="g2">&asymp; Close</span><span class="g3">! Surprised &rarr; that&rsquo;s today&rsquo;s lesson</span></div>
+<div class="why3">
+  <div><b>Reading feels like understanding.</b><span>Generated code looks obvious once you see it &mdash; that&rsquo;s fluency, not skill.</span></div>
+  <div><b>A wrong guess is a gift.</b><span>The gap between prediction and output shows exactly which idea to fix.</span></div>
+  <div><b>It scales.</b><span>Over time you start predicting results on real tables &mdash; that&rsquo;s review skill.</span></div>
+</div>
+<p class="kicker">Habit: <b>before running any AI-written query, type your guess as a comment</b> &mdash; row count and one expected value.</p>
+"""))
+
+# ---------------------------------------------------------------- 06 layers
+S.append(('std', """
+<div class="eyebrow">05 &middot; BUILD QUERIES IN LAYERS</div>
+<h2>Never aggregate rows you haven&rsquo;t looked at</h2>
+<p class="lead">Question: <b>&ldquo;Net revenue from shipped orders, by region.&rdquo;</b> Build it in five layers and check each one before moving on.</p>
+<div class="layers">
+  <div class="ly"><div class="ly-n">1</div><div class="ly-c"><b>Start with SELECT</b>""" + icode("SELECT order_id, region, status,\n       amount, discount\nFROM orders LIMIT 20;") + """</div><div class="ly-k">Check: do the columns mean what I think?</div></div>
+  <div class="ly"><div class="ly-n">2</div><div class="ly-c"><b>Add the filter</b>""" + icode("WHERE status = 'shipped'") + """</div><div class="ly-k">Check: row count before vs after &mdash; plausible?</div></div>
+  <div class="ly"><div class="ly-n">3</div><div class="ly-c"><b>Inspect the rows</b><span class="ly-t">Scan 5&ndash;10 rows. Any odd statuses, negative amounts, test accounts?</span></div><div class="ly-k">Check: would I trust these rows?</div></div>
+  <div class="ly"><div class="ly-n">4</div><div class="ly-c"><b>Add calculations</b>""" + icode("amount - discount AS net_amount") + """</div><div class="ly-k">Check: hand-calculate 2 rows.</div></div>
+  <div class="ly last"><div class="ly-n">5</div><div class="ly-c"><b>Aggregate last</b>""" + icode("SELECT region,\n       SUM(amount - discount) AS net_revenue\n... GROUP BY region;") + """</div><div class="ly-k">Check: do the totals add up to layer 4?</div></div>
+</div>
+<p class="kicker">Asking AI for a finished query skips layers 1&ndash;4. <b>Ask it for one layer at a time</b> &mdash; and run each one yourself.</p>
+"""))
+
+# ---------------------------------------------------------------- 07 counterexamples
+S.append(('std', """
+<div class="eyebrow">06 &middot; ASK AI FOR COUNTEREXAMPLES</div>
+<h2>Make AI try to break the query &mdash; not just write it</h2>
+""" + code("""
+-- Question: "Who is our top customer by revenue?"
+SELECT customer, SUM(amount) AS total
+FROM orders
+GROUP BY customer
+ORDER BY total DESC
+LIMIT 1;
+""", cls="sm", label="THE QUERY UNDER TEST") + """
+<div class="askbox"><b>Prompt:</b> &ldquo;Create 3 tiny example tables that would make this query give a misleading answer to the question. Don&rsquo;t fix it &mdash; just explain what changes.&rdquo;</div>
+<table class="tbl cx">
+  <tr><th>Counterexample</th><th>Tiny data</th><th>What happens</th></tr>
+  <tr><td><b>A tie</b></td><td>Ana 100 &middot; Ben 100</td><td>Only one name returned &mdash; which one is arbitrary</td></tr>
+  <tr><td><b>Mixed currencies</b></td><td>Ana 95 USD &middot; Ben 90 GBP</td><td>Ana &ldquo;wins&rdquo; &mdash; but Ben spent more</td></tr>
+  <tr><td><b>Cancelled orders</b></td><td>Cy: 500 cancelled</td><td>Cy &ldquo;wins&rdquo; without paying anything</td></tr>
+</table>
+<div class="decide">
+  <b>Then decide yourself:</b><span>Real risk in <i>my</i> data?</span><span>Fix the query?</span><span>Or document it?</span>
+</div>
+<div class="askbox"><b>Follow-up:</b> &ldquo;For each case, which line of the query would I change &mdash; and what new assumption would that add?&rdquo;</div>
+<p class="kicker">A counterexample that changes the answer <b>without causing an error</b> is the most valuable lesson you can get &mdash; errors warn you; wrong results don&rsquo;t.</p>
+"""))
+
+# ---------------------------------------------------------------- 08 annotate
+S.append(('std', """
+<div class="eyebrow">07 &middot; TURN EVERY QUERY INTO A LESSON</div>
+<h2>Annotate unfamiliar SQL with six labels</h2>
+""" + code("""
+SELECT region,
+       SUM(CASE WHEN status = 'cancelled'
+                THEN 1 ELSE 0 END) * 1.0
+         / COUNT(*) AS cancel_rate
+FROM orders
+WHERE amount >= 20
+GROUP BY region;
+""", label="A QUERY AI WROTE FOR YOU") + """
+<div class="notes6">
+  <div class="n6"><i>1</i><div><b>Input tables</b><span>orders</span></div></div>
+  <div class="n6"><i>2</i><div><b>Row grain (in)</b><span>one row per order</span></div></div>
+  <div class="n6"><i>3</i><div><b>Filters</b><span>orders of $20 or more, any status</span></div></div>
+  <div class="n6"><i>4</i><div><b>Transformations</b><span>flag cancelled orders as 1, divide by all orders</span></div></div>
+  <div class="n6"><i>5</i><div><b>Output grain</b><span>one row per region</span></div></div>
+  <div class="n6"><i>6</i><div><b>Business meaning</b><span>&ldquo;What share of meaningful orders get cancelled in each region?&rdquo;</span></div></div>
+</div>
+<div class="log">
+  <div class="log-h">KEEP A SQL LESSON LOG</div>
+  <p>One entry per unfamiliar query: the six labels + <b>one thing I didn&rsquo;t know</b>. After 20 entries, reread it &mdash; that&rsquo;s your personal SQL textbook.</p>
+</div>
+<p class="kicker">If you can&rsquo;t fill in label 6, <b>you can&rsquo;t defend the number in a meeting.</b> Ask AI to explain only the labels you got stuck on.</p>
+"""))
+
+# ---------------------------------------------------------------- 09 practice loop
+S.append(('std', """
+<div class="eyebrow">08 &middot; THE 20-MINUTE SQL PRACTICE LOOP</div>
+<h2>One business question. Twenty minutes. Real skill.</h2>
+<div class="loop">
+  <div class="lp"><div class="lp-t">2 min</div><div class="lp-n">1</div><div class="lp-c"><b>Pick one business question</b><span>e.g. &ldquo;Which regions have customers who ordered but never received a shipment?&rdquo;</span></div></div>
+  <div class="lp"><div class="lp-t">6 min</div><div class="lp-n">2</div><div class="lp-c"><b>Write your own first attempt</b><span>No AI. Messy is fine &mdash; the struggle is where learning happens.</span></div></div>
+  <div class="lp"><div class="lp-t">4 min</div><div class="lp-n">3</div><div class="lp-c"><b>Ask AI for hints, not the answer</b><span>Use the tutor prompt below. One hint at a time.</span></div></div>
+  <div class="lp"><div class="lp-t">4 min</div><div class="lp-n">4</div><div class="lp-c"><b>Compare approaches</b><span>Run yours and AI&rsquo;s on the same tiny table. Same result? If not, why?</span></div></div>
+  <div class="lp"><div class="lp-t">4 min</div><div class="lp-n">5</div><div class="lp-c"><b>Explain the final query</b><span>Aloud or in 3 written sentences: what it keeps, what it computes, what it means.</span></div></div>
+  <div class="lp-back">&#8634; next session: a new question, or the same one with a twist</div>
+</div>
+<div class="bank"><div class="bank-h">STARTER QUESTIONS</div>
+  <span>Which products are bought by only one customer?</span>
+  <span>Which regions have more than 10 customers with only one order?</span>
+  <span>Which customers spend above their region&rsquo;s average order?</span>
+</div>
+""" + TUTOR + """
+"""))
+
+# ---------------------------------------------------------------- 10 CTA
+S.append(('cta', """
+<div class="eyebrow light">CLOSE THE CHAT &middot; KEEP THE SKILL</div>
+<h2 class="cta-quote">The future SQL skill is not typing faster.<br><span class="hl">It is thinking clearly about data.</span></h2>
+<div class="recap">
+  <div><i>1</i><b>Interview the data</b> before the query</div>
+  <div><i>2</i><b>Ask AI to explain,</b> not just generate</div>
+  <div><i>3</i><b>Predict</b> the output before you run</div>
+  <div><i>4</i><b>Build in layers,</b> aggregate last</div>
+  <div><i>5</i><b>Ask for counterexamples</b></div>
+  <div><i>6</i><b>Annotate</b> every unfamiliar query</div>
+  <div class="wide"><i>7</i><b>Run the 20-minute loop</b> &mdash; one question per session</div>
+</div>
+<div class="cta">
+  <div class="cta-line">What SQL concept do you want AI to help you <i>learn</i> &mdash; not just write?</div>
+  <div class="cta-sub">Drop it in the comments. Save this carousel for your next SQL practice session, and share it with someone learning SQL alongside AI.</div>
+</div>
+<div class="cover-foot">
+  <div class="rule"></div>
+  <div class="cover-by">Sagar Rathkanthiwar<span>Data &amp; AI Professional &middot; follow for more practical guides</span></div>
+</div>
+"""))
+
+# ---------------------------------------------------------------- template
+CSS = """
+:root{
+  --ink:#122033; --body:#3a4658; --muted:#6c778a; --line:#e2e4e0;
+  --paper:#fbfaf6; --soft:#f1f3ef;
+  --teal:#0e7c74; --teal-l:#e4f2ef; --amber:#d9891c; --amber-l:#fbf0dc;
+  --coral:#c8503f; --coral-l:#f9e6e2; --blue:#2e63a8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+@page{ size:810pt 1012.5pt; margin:0; }
+html,body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body{ font-family:"Segoe UI","Inter",Arial,sans-serif; color:var(--body); background:#fff; }
+.slide{ position:relative; width:1080px; height:1350px; overflow:hidden;
+  padding:72px 72px 112px; background:var(--paper);
+  page-break-after:always; display:flex; flex-direction:column; }
+.slide:last-child{ page-break-after:auto; }
+.slide > *{ flex-shrink:0; }
+.accentbar{ position:absolute; top:0; left:0; width:100%; height:10px;
+  background:linear-gradient(90deg,var(--teal) 0 55%,var(--amber) 55% 80%,var(--coral) 80%); }
+.foot{ position:absolute; left:0; right:0; bottom:0; height:66px; background:var(--ink);
+  display:flex; align-items:center; justify-content:space-between; padding:0 72px; }
+.foot span{ color:#fff; font-size:19px; letter-spacing:.03em; font-weight:600; }
+.foot .r{ color:#9fb3cc; font-weight:600; letter-spacing:.12em; }
+
+.eyebrow{ font-size:20px; font-weight:800; letter-spacing:.18em; color:var(--teal); margin-bottom:16px; }
+.eyebrow.light{ color:#f3b75a; }
+h2{ font-family:Georgia,"Times New Roman",serif; font-size:54px; line-height:1.1; letter-spacing:-.015em;
+  color:var(--ink); font-weight:700; margin-bottom:24px; }
+.lead{ font-size:25px; line-height:1.45; margin-bottom:22px; }
+.lead b{ color:var(--ink); }
+.kicker{ margin-top:auto; font-size:24px; line-height:1.45; border-left:8px solid var(--amber);
+  background:var(--amber-l); padding:20px 26px; border-radius:0 14px 14px 0; }
+.kicker b{ color:var(--ink); }
+.cardlabel{ font-size:15px; font-weight:800; letter-spacing:.12em; color:var(--teal); margin-bottom:10px; }
+
+.codewrap{ margin-bottom:20px; }
+.codelabel{ display:inline-block; background:var(--teal); color:#fff; font-size:14px; font-weight:800;
+  letter-spacing:.12em; padding:7px 14px; border-radius:10px 10px 0 0; }
+.code{ font-family:Consolas,"Cascadia Mono","Courier New",monospace; font-size:22px; line-height:1.5;
+  background:#13202f; color:#dde6f1; padding:22px 26px; border-radius:0 14px 14px 14px; white-space:pre; overflow:hidden; }
+.code.sm{ font-size:20px; }
+.code.inl{ font-size:18px; line-height:1.4; padding:9px 14px; border-radius:9px; margin-top:6px; }
+.code .k{ color:#7fc4ff; font-weight:600; } .code .f{ color:#f3b75a; } .code .s{ color:#8fdcae; }
+.code .n{ color:#f6a38f; } .code .c{ color:#8795ad; font-style:italic; }
+
+.twocol{ display:flex; gap:22px; margin-bottom:20px; align-items:stretch; }
+.twocol > *{ flex:1; min-width:0; }
+.twocol.top{ align-items:flex-start; }
+.twocol .codewrap{ margin-bottom:14px; }
+.colstack{ display:flex; flex-direction:column; flex:1.35 !important; }
+
+/* slide 2 */
+.vs{ display:flex; gap:20px; margin-bottom:24px; }
+.vs > div{ flex:1; border-radius:16px; padding:22px 26px; }
+.vs-old{ background:#eeeeea; border:2px solid #d8d8d2; }
+.vs-new{ background:var(--teal-l); border:2px solid var(--teal); }
+.vs-h{ font-size:16px; font-weight:800; letter-spacing:.14em; margin-bottom:12px; }
+.vs-old .vs-h{ color:var(--muted); } .vs-new .vs-h{ color:var(--teal); }
+.vs ul{ list-style:none; }
+.vs li{ font-size:23px; line-height:1.35; padding:6px 0 6px 34px; position:relative; color:var(--ink); }
+.vs-old li{ color:#737a86; text-decoration:line-through; text-decoration-color:#b9bcc2; }
+.vs-old li:before{ content:"\\2715"; position:absolute; left:2px; color:#a3a7ad; font-size:19px; top:9px; }
+.vs-new li:before{ content:"\\2713"; position:absolute; left:0; color:var(--teal); font-weight:800; font-size:23px; }
+.vs-foot{ margin-top:12px; font-size:18px; font-style:italic; color:var(--muted); }
+.chain{ display:flex; align-items:stretch; gap:8px; margin-bottom:22px; }
+.ch{ flex:1; background:#fff; border:2px solid var(--line); border-top:6px solid var(--teal); border-radius:12px; padding:14px 14px; }
+.ch b{ display:block; font-size:22px; color:var(--ink); margin-bottom:6px; }
+.ch span{ font-size:17.5px; line-height:1.35; }
+.ch-a{ align-self:center; font-size:26px; color:var(--amber); font-weight:800; }
+
+/* slide 3 */
+.steps4{ display:flex; gap:12px; margin-bottom:22px; }
+.s4{ flex:1; background:#fff; border:2px solid var(--line); border-radius:14px; padding:16px 16px; }
+.s4 i{ font-style:normal; display:inline-flex; width:38px; height:38px; border-radius:50%; background:var(--teal); color:#fff;
+  align-items:center; justify-content:center; font-weight:800; font-size:20px; margin-bottom:10px; }
+.s4 b{ display:block; font-size:21px; color:var(--ink); margin-bottom:5px; line-height:1.2; }
+.s4 span{ font-size:17.5px; line-height:1.35; }
+.schema-card{ background:#fff; border:2px solid var(--ink); border-radius:14px; overflow:hidden; align-self:flex-start; }
+.sc-h{ background:var(--ink); color:#fff; font-family:Consolas,monospace; font-size:22px; font-weight:700; padding:12px 18px; }
+.sc-r{ display:flex; align-items:center; gap:10px; padding:11px 16px; border-top:1px solid var(--line); font-size:20px; }
+.sc-r span{ width:38px; font-size:13px; font-weight:800; text-align:center; border-radius:5px; padding:3px 0; }
+.sc-r .pk{ background:var(--amber); color:#fff; } .sc-r .fk{ background:var(--blue); color:#fff; }
+.sc-r b{ font-family:Consolas,monospace; color:var(--ink); flex:1; font-weight:600; }
+.sc-r em{ font-style:normal; color:var(--muted); font-size:17px; }
+.fill{ background:var(--teal-l); border:2px dashed var(--teal); border-radius:14px; padding:18px 24px; margin-bottom:20px; }
+.fill-h{ font-size:15px; font-weight:800; letter-spacing:.14em; color:var(--teal); margin-bottom:6px; }
+.fill p{ font-size:24px; line-height:1.45; color:var(--ink); }
+.fill u{ text-decoration:none; border-bottom:3px solid var(--amber); font-weight:700; padding:0 2px; }
+
+/* slide 4 */
+.contrast{ display:flex; gap:18px; margin-bottom:22px; }
+.contrast > div{ flex:1; border-radius:14px; padding:18px 22px; }
+.ct-bad{ background:var(--coral-l); border-top:6px solid var(--coral); }
+.ct-good{ background:var(--teal-l); border-top:6px solid var(--teal); }
+.ct-h{ font-size:15px; font-weight:800; letter-spacing:.14em; margin-bottom:8px; }
+.ct-bad .ct-h{ color:var(--coral); } .ct-good .ct-h{ color:var(--teal); }
+.contrast p{ font-family:Georgia,serif; font-size:23px; line-height:1.35; color:var(--ink); font-style:italic; margin-bottom:8px; }
+.contrast span{ font-size:18.5px; line-height:1.4; }
+.prompts{ display:flex; flex-direction:column; gap:11px; margin-bottom:20px; }
+.pr{ display:flex; gap:18px; align-items:center; background:#fff; border:2px solid var(--line); border-radius:14px; padding:13px 20px; }
+.pr-n{ min-width:44px; height:44px; border-radius:12px; background:var(--ink); color:#f3b75a; font-weight:800; font-size:22px;
+  display:flex; align-items:center; justify-content:center; }
+.pr b{ display:block; font-size:23px; color:var(--ink); line-height:1.25; }
+.pr span{ font-size:18.5px; color:var(--body); }
+
+/* slide 5 */
+.tbl{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:2px solid var(--line); border-radius:14px; overflow:hidden; margin-bottom:18px; }
+.tbl th{ background:var(--ink); color:#fff; font-size:17px; font-weight:700; letter-spacing:.04em; text-align:left; padding:12px 14px; }
+.tbl td{ font-size:20px; padding:11px 14px; border-top:1px solid var(--line); color:var(--ink); font-family:Consolas,monospace; }
+.tbl.cx td{ font-family:"Segoe UI",Arial,sans-serif; font-size:19.5px; line-height:1.3; }
+.tbl.cx td:nth-child(2){ font-family:Consolas,monospace; font-size:18px; white-space:nowrap; }
+.guess{ background:#fff; border:2px dashed var(--amber); border-radius:14px; padding:14px 20px; }
+.g-h{ font-size:15px; font-weight:800; letter-spacing:.14em; color:var(--amber); margin-bottom:6px; }
+.g-q{ font-size:21px; color:var(--ink); padding:4px 0; }
+.reveal{ display:flex; align-items:center; gap:18px; background:var(--ink); border-radius:14px; padding:16px 22px; margin-bottom:22px; }
+.rv-h{ font-size:14px; font-weight:800; letter-spacing:.14em; color:#f3b75a; writing-mode:horizontal-tb; min-width:118px; }
+.rv-b{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; }
+.rv-row{ font-family:Consolas,monospace; font-size:21px; background:#233349; color:#fff; padding:6px 14px; border-radius:8px; }
+.rv-sur{ font-size:20px; color:#ffc9bd; flex-basis:100%; }
+.why3{ display:flex; gap:14px; margin-bottom:22px; }
+.why3 div{ flex:1; background:var(--teal-l); border-radius:14px; padding:16px 18px; border-top:6px solid var(--teal); }
+.why3 b{ display:block; font-size:20.5px; color:var(--ink); margin-bottom:6px; line-height:1.25; }
+.why3 span{ font-size:17.5px; line-height:1.4; }
+
+/* slide 6 */
+.layers{ display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+.ly{ display:flex; align-items:center; gap:16px; background:#fff; border:2px solid var(--line); border-radius:14px; padding:12px 18px; }
+.ly.last{ border-color:var(--teal); background:var(--teal-l); }
+.ly-n{ min-width:46px; height:46px; border-radius:50%; background:var(--teal); color:#fff; font-weight:800; font-size:22px;
+  display:flex; align-items:center; justify-content:center; }
+.ly-c{ flex:1.7; min-width:0; }
+.ly-c b{ font-size:21px; color:var(--ink); display:block; }
+.ly-t{ display:block; font-size:18px; line-height:1.35; margin-top:4px; }
+.ly-k{ flex:1; font-size:17.5px; line-height:1.35; color:#7a4d0c; background:var(--amber-l); border-radius:10px; padding:10px 12px; font-weight:600; }
+
+/* slide 7 */
+.askbox{ font-size:21px; line-height:1.45; background:#fff; border:2px solid var(--teal); border-radius:14px; padding:16px 22px; margin-bottom:18px; color:var(--ink); }
+.askbox b{ color:var(--teal); }
+.decide{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:20px; font-size:20px; }
+.decide b{ color:var(--ink); }
+.decide span{ background:#fff; border:2px solid var(--line); border-radius:999px; padding:6px 16px; color:var(--ink); }
+
+/* slide 8 */
+.notes6{ display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; margin-bottom:18px; }
+.n6{ display:flex; gap:12px; align-items:flex-start; background:#fff; border:2px solid var(--line); border-radius:12px; padding:11px 14px; }
+.n6 i{ font-style:normal; min-width:30px; height:30px; border-radius:8px; background:var(--amber); color:#fff; font-weight:800; font-size:17px;
+  display:flex; align-items:center; justify-content:center; }
+.n6 b{ display:block; font-size:16px; letter-spacing:.06em; text-transform:uppercase; color:var(--teal); margin-bottom:2px; }
+.n6 span{ font-size:19px; color:var(--ink); line-height:1.3; }
+.n6:last-child{ grid-column:1 / span 2; }
+.log{ background:var(--teal-l); border-radius:14px; padding:14px 22px; margin-bottom:18px; }
+.log-h{ font-size:15px; font-weight:800; letter-spacing:.14em; color:var(--teal); margin-bottom:4px; }
+.log p{ font-size:20px; line-height:1.4; } .log b{ color:var(--ink); }
+
+/* slide 9 */
+.loop{ position:relative; display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+.lp{ display:flex; align-items:center; gap:14px; background:#fff; border:2px solid var(--line); border-radius:14px; padding:12px 18px; }
+.lp-t{ min-width:78px; text-align:center; font-size:16px; font-weight:800; color:var(--amber); background:var(--amber-l); border-radius:8px; padding:6px 0; }
+.lp-n{ min-width:42px; height:42px; border-radius:50%; background:var(--teal); color:#fff; font-weight:800; font-size:20px;
+  display:flex; align-items:center; justify-content:center; }
+.lp-c b{ display:block; font-size:22px; color:var(--ink); }
+.lp-c span{ font-size:18px; line-height:1.35; }
+.lp-back{ text-align:center; font-size:18px; color:var(--teal); font-weight:700; letter-spacing:.02em; }
+.tutor{ margin-top:auto; background:var(--ink); border-radius:16px; padding:20px 26px; border:3px solid #f3b75a; }
+.tutor-h{ display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+.tutor-h b{ color:#fff; font-size:23px; }
+.tutor-badge{ background:#f3b75a; color:var(--ink); font-size:13px; font-weight:800; letter-spacing:.12em; padding:5px 10px; border-radius:6px; }
+.tutor-p{ font-family:Consolas,"Cascadia Mono",monospace; font-size:19.5px; line-height:1.5; color:#dfe8f3; white-space:pre-wrap; }
+
+/* cover + cta (dark) */
+.cover, .ctaS{ background:var(--ink); color:#fff; }
+.cover{ padding:84px 72px 112px; }
+.cover .eyebrow{ font-size:18px; line-height:1.5; }
+.cover-title{ font-family:Georgia,"Times New Roman",serif; font-size:94px; line-height:1.04; font-weight:700; letter-spacing:-.025em; color:#fff; margin-top:10px; }
+.cover-title .hl, .cta-quote .hl{ color:#6fd3c6; }
+.cover-sub{ margin-top:28px; font-size:33px; line-height:1.35; color:#bfcadb; }
+.habits{ margin-top:56px; display:flex; align-items:stretch; gap:8px; }
+.hb{ flex:1; background:#1b2c42; border:2px solid #31465f; border-radius:14px; padding:16px 10px; text-align:center; }
+.hb i{ font-style:normal; display:inline-flex; width:36px; height:36px; border-radius:50%; background:#f3b75a; color:var(--ink);
+  font-weight:800; font-size:18px; align-items:center; justify-content:center; margin-bottom:8px; }
+.hb b{ display:block; font-size:23px; color:#fff; margin-bottom:4px; }
+.hb span{ font-size:15.5px; color:#9fb3cc; line-height:1.3; }
+.hb-a{ align-self:center; color:#6f86a3; font-size:22px; font-weight:800; }
+.cover-loop{ margin-top:22px; text-align:center; font-size:21px; color:#9fb3cc; }
+.cover-loop b{ color:#f3b75a; }
+.cover-foot{ margin-top:auto; }
+.cover-foot .rule{ height:3px; background:#2b3d55; margin-bottom:24px; }
+.cover-by{ font-size:29px; font-weight:700; color:#fff; }
+.cover-by span{ display:block; font-size:22px; font-weight:500; color:#9fb3cc; margin-top:6px; }
+.cover-meta{ margin-top:16px; font-size:22px; color:#6fd3c6; font-weight:600; letter-spacing:.03em; }
+.cta-quote{ color:#fff; font-size:60px; line-height:1.12; margin-bottom:34px; }
+.recap{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:30px; }
+.recap div{ background:#1b2c42; border:2px solid #31465f; border-radius:12px; padding:13px 16px; font-size:20px; color:#c7d2e1;
+  display:flex; align-items:center; gap:12px; }
+.recap div.wide{ grid-column:1 / span 2; }
+.recap i{ font-style:normal; min-width:32px; height:32px; border-radius:50%; background:#6fd3c6; color:var(--ink); font-weight:800; font-size:16px;
+  display:inline-flex; align-items:center; justify-content:center; }
+.recap b{ color:#fff; }
+.cta{ background:#f3b75a; border-radius:18px; padding:26px 30px; }
+.cta-line{ font-family:Georgia,serif; font-size:34px; line-height:1.25; font-weight:700; color:var(--ink); margin-bottom:10px; }
+.cta-sub{ font-size:21px; line-height:1.45; color:#3b2a0e; }
+
+/* v2 sizing */
+.mono{ font-family:Consolas,"Cascadia Mono",monospace; font-size:.9em; background:#eceae3; color:var(--ink); padding:1px 6px; border-radius:5px; }
+.survey{ background:#fff; border:2px solid var(--ink); border-radius:14px; overflow:hidden; align-self:stretch; flex:1 !important; }
+.sv-h{ background:var(--ink); color:#fff; font-size:15px; font-weight:800; letter-spacing:.12em; padding:13px 18px; }
+.sv-r{ padding:14px 18px; border-top:1px solid var(--line); }
+.sv-r b{ display:block; font-family:Consolas,monospace; font-size:21px; color:var(--coral); margin-bottom:4px; }
+.sv-r > span{ font-size:19px; line-height:1.4; color:var(--ink); }
+.colstack{ flex:1.1 !important; }
+
+.own{ display:flex; gap:16px; margin-bottom:22px; }
+.own > div{ flex:1; background:#fff; border:2px solid var(--line); border-radius:14px; padding:16px 20px; font-size:19.5px; line-height:1.45; color:var(--ink); }
+.own-h{ display:block; font-size:14px; font-weight:800; letter-spacing:.14em; margin-bottom:6px; }
+.own-h.t{ color:var(--muted); } .own-h.a{ color:var(--amber); }
+.flag{ font-size:20.5px; line-height:1.4; background:var(--coral-l); border-left:6px solid var(--coral); border-radius:0 12px 12px 0; padding:16px 22px; margin-bottom:22px; color:var(--body); }
+.flag b{ color:var(--coral); } .flag.t{ background:var(--teal-l); border-left-color:var(--teal); } .flag.t b{ color:var(--teal); }
+.lead{ font-size:27px; }
+.vs li{ font-size:25px; padding:8px 0 8px 36px; } .vs > div{ padding:26px 28px; } .vs-h{ font-size:17px; }
+.vs{ margin-bottom:30px; } .chain{ margin-bottom:28px; } .ch{ padding:18px 16px; } .ch b{ font-size:24px; } .ch span{ font-size:19.5px; }
+.s4{ padding:20px 18px; } .s4 b{ font-size:23px; } .s4 span{ font-size:19px; }
+.sc-r{ padding:15px 18px; font-size:22px; } .sc-h{ font-size:24px; padding:14px 18px; }
+.steps4{ margin-bottom:28px; } .fill{ padding:22px 26px; margin-bottom:26px; } .fill p{ font-size:26px; }
+.contrast{ margin-bottom:28px; } .contrast > div{ padding:22px 24px; } .contrast p{ font-size:25px; } .contrast span{ font-size:19.5px; }
+.prompts{ gap:12px; } .pr{ padding:14px 22px; } .pr b{ font-size:25px; } .pr span{ font-size:20px; }
+.tbl td{ font-size:22px; padding:14px 14px; } .tbl th{ font-size:18px; padding:14px; }
+.tbl.cx td{ font-size:21px; } .tbl.cx td:nth-child(2){ font-size:19px; }
+.g-q{ font-size:23px; padding:6px 0; } .guess{ padding:16px 22px; }
+.reveal{ padding:20px 24px; } .rv-row{ font-size:23px; } .rv-sur{ font-size:22px; }
+.grade{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:20px; margin-bottom:22px; }
+.grade b{ color:var(--ink); margin-right:4px; }
+.grade span{ border-radius:999px; padding:7px 16px; font-weight:600; }
+.grade .g1{ background:var(--teal-l); color:var(--teal); } .grade .g2{ background:var(--amber-l); color:#8a5710; } .grade .g3{ background:var(--coral-l); color:var(--coral); }
+.why3 div{ padding:18px 20px; } .why3 b{ font-size:22px; } .why3 span{ font-size:18.5px; }
+.layers{ gap:13px; } .ly{ padding:15px 20px; } .ly-c b{ font-size:23px; } .ly-t{ font-size:19.5px; } .ly-k{ font-size:18.5px; padding:12px 14px; }
+.code.sm{ font-size:21px; } .askbox{ font-size:21.5px; padding:15px 22px; margin-bottom:18px; }
+.decide{ flex-wrap:nowrap; font-size:20px; gap:10px; margin-bottom:18px; } .decide span{ padding:7px 14px; white-space:nowrap; }
+.notes6{ gap:12px 14px; margin-bottom:22px; } .n6{ padding:14px 16px; } .n6 span{ display:block; font-size:21px; }
+.log{ padding:18px 24px; } .log p{ font-size:21px; }
+.loop{ gap:12px; } .lp{ padding:15px 20px; } .lp-c b{ font-size:24px; } .lp-c span{ font-size:19.5px; }
+.bank{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:22px; }
+.bank-h{ width:100%; font-size:15px; font-weight:800; letter-spacing:.14em; color:var(--teal); }
+.bank span{ background:#fff; border:2px solid var(--line); border-radius:999px; padding:8px 16px; font-size:18.5px; color:var(--ink); }
+.tutor-p{ font-size:20.5px; }
+.habits{ margin-top:60px; } .hb{ padding:20px 10px; } .hb b{ font-size:25px; } .hb span{ font-size:16.5px; }
+.dialog{ margin-top:40px; display:flex; flex-direction:column; gap:14px; }
+.bub{ display:flex; gap:16px; align-items:center; border-radius:18px; padding:18px 24px; max-width:86%; }
+.bub .who{ font-size:15px; font-weight:800; letter-spacing:.12em; border-radius:8px; padding:6px 10px; }
+.bub p{ font-size:25px; line-height:1.35; }
+.bub.ai{ background:#1b2c42; border:2px solid #31465f; } .bub.ai .who{ background:#31465f; color:#c7d2e1; } .bub.ai p{ color:#c7d2e1; }
+.bub.you{ align-self:flex-end; background:#0f3f3d; border:2px solid #2ba597; } .bub.you .who{ background:#6fd3c6; color:var(--ink); } .bub.you p{ color:#fff; }
+.cover-loop{ margin-top:26px; font-size:22px; }
+.recap{ gap:14px; } .recap div{ font-size:22px; padding:16px 18px; }
+.cta-line{ font-size:36px; } .cta-sub{ font-size:22px; } .cta{ padding:30px 32px; }
+"""
+
+TITLE = "How to Learn SQL in the AI Era"
+BODY = []
+for i, (kind, content) in enumerate(S, start=1):
+    cls = "slide" + {"cover": " cover", "cta": " ctaS"}.get(kind, "")
+    if kind == 'cover':
+        foot = ('<div class="foot"><span>%s</span><span class="r">01 / %02d &nbsp;&middot;&nbsp; SWIPE &rarr;</span></div>'
+                % (TITLE, len(S)))
+    else:
+        foot = ('<div class="foot"><span>Sagar Rathkanthiwar &nbsp;|&nbsp; %s</span><span class="r">%02d / %02d</span></div>'
+                % (TITLE, i, len(S)))
+    BODY.append('<section class="%s"><div class="accentbar"></div>%s%s</section>' % (cls, content, foot))
+
+CHECK = """<script>
+window.addEventListener('load',()=>{const r=[];document.querySelectorAll('.slide').forEach((s,i)=>{
+const lim=s.getBoundingClientRect().top+1350-66-16;let mx=0;
+s.querySelectorAll(':scope > *:not(.foot):not(.accentbar)').forEach(c=>{mx=Math.max(mx,c.getBoundingClientRect().bottom)});
+const pre=[...s.querySelectorAll('pre')].some(p=>p.scrollWidth>p.clientWidth+1);
+r.push((i+1)+':'+Math.round(lim-mx)+(pre?'(PRE-OVERFLOW)':''));});
+const d=document.createElement('div');d.id='fitreport';d.textContent=r.join(' ');document.body.appendChild(d);});
+</script>""" if os.environ.get("FITCHECK") else ""
+
+HTML = """<!doctype html><html><head><meta charset="utf-8">
+<title>How to Learn SQL in the AI Era</title><style>%s</style></head><body>%s%s</body></html>""" % (
+    CSS, "\n".join(BODY), CHECK)
+
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                   ("_fitcheck.html" if CHECK else "learn_sql_ai_era_carousel_2026-09-25.html"))
+with io.open(out, "w", encoding="utf-8") as f:
+    f.write(HTML)
+print("wrote", out, len(HTML), "bytes,", len(S), "slides")

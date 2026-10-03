@@ -360,7 +360,7 @@ All generated content must reference specific findings from your filtered resear
   - Future outlook and potential impact
   - Conclusion with key takeaways
   - Proper formatting for Medium (headings, lists, emphasis)
-- Create a prompt for generating an infographic image using NotebookLM, ChatGPT, or Gemini Nano Banana. **CRITICAL:** The prompt MUST instruct the image generator to include your author name "SAGAR RATHKANTHIWAR" centered cleanly right below the main title, and a footer text reading "Follow Sagar Rathkanthiwar | Repost to share with your network" at the very bottom.
+- Create a prompt for generating an infographic image using NotebookLM, ChatGPT, or Gemini Nano Banana, in the Pastel Sketchnote style (`GenAI_Articles/infographic_style_pastel_sketchnote.md`).
 - Write a LinkedIn post to promote the Medium article with a link to it
 
 #### If LinkedIn Post is Selected:
@@ -398,9 +398,22 @@ Create a detailed LinkedIn post (~150-250 words total. Be ruthlessly concise and
 - Use short paragraphs (2-3 sentences max)
 - Add line breaks between sections for readability
 - Use bold or emphasis sparingly for key terms
-- No hashtags (keep it clean and professional)
 - No emojis unless contextually appropriate
 - End with a clear takeaway or call to action
+
+**Hashtags (REQUIRED — append after post body):**
+After the post body and source attribution, always append a hashtag line.
+- Generate 5–8 relevant hashtags based on the post's topic, audience, and angle
+- Always include at least one broad reach tag (e.g. `#AIEngineering`, `#DataEngineering`, `#SoftwareEngineering`)
+- Always include at least one topic-specific tag tied to the post's core subject
+- Always include at least one career/audience tag (e.g. `#TechLeadership`, `#DataScience`, `#Productivity`)
+- Use the saved hashtag set as a starting point: `#AIEngineering #AIAgents #LLMs #TechLeadership #Productivity` — swap or extend based on topic
+- Format: single line, space-separated, no punctuation between tags
+
+Example:
+```
+#SQL #DataEngineering #DataScience #DataAnalytics #Analytics #TechLeadership #AIEngineering
+```
 
 **Source Attribution (REQUIRED):**
 At the end of the post, add a source attribution section:
@@ -420,26 +433,25 @@ Research date: 2026-03-17
 If multiple sources were used, list the primary source that provided the core insight.
 
 **Image Generation Prompt**
-Generate a detailed prompt for creating an infographic/diagram that visually explains the concept:
+Generate a detailed, high-quality infographic prompt that visually explains the post's central insight. The prompt must be specific enough for an image model to produce an accurate, publication-ready graphic without generic AI imagery.
 
-**MANDATORY AUTHOR BRANDING REQUIREMENT:** Every single image generation prompt MUST include a strict instruction to place the text "SAGAR RATHKANTHIWAR" cleanly centered directly beneath the main title of the infographic, AND include a bottom footer text reading "Follow Sagar Rathkanthiwar | Repost to share with your network".
+**MANDATORY STYLE:** Every image prompt MUST use the **Pastel Sketchnote** style defined in `GenAI_Articles/infographic_style_pastel_sketchnote.md` (4:5 vertical, 1080×1350px). Read that file before writing the prompt. No reference image is attached — the style block is self-contained.
 
-**For technical concepts (like async Python):**
-- Create a visual comparison (before/after, sequential vs parallel)
-- Include labeled components (threads, tasks, agents)
-- Show flow or execution patterns
-- Use colors to differentiate states (waiting, running, completed)
-- Style: Clean, minimalist, technical diagram
+**How to build the image prompt:**
+1. Copy the **STYLE BLOCK** (section 1 of the style file) **verbatim** — never shorten, paraphrase, or "improve" it.
+2. Below it, write a fresh **CONTENT BLOCK** for this post using the template and section modules in section 2 of the style file:
+   - 5–6 numbered sections; the last is always **Key takeaway**
+   - At least one visual module (diagram, flow, or table)
+   - Color goes on the number circle / "faint-blue" or "faint-pink card" wording only — never "(blue section)"
+   - Every section gets a layout hint (left half / right half / full width / bottom-left / bottom-right)
+   - Max ~12 words per bullet, every rendered string in quotes
+   - Verify all technical content (diagrams, code, table facts) is correct
+3. Deliver the prompt as **one copyable code block** (style block + content block together).
+4. Below the code block, include the **fix-up edit prompt** (section 4 of the style file) so the user can correct drift in one step.
 
-**For optimization concepts (like prompt caching):**
-- Show the cost/performance difference visually
-- Include comparison tables or charts
-- Highlight what changes between approaches
-- Use visual metaphors (cache storage, token flow)
-- Style: Infographic with data visualization
+See section 3 of the style file for a complete worked example ("Why JOINs Still Matter").
 
-**Example Image Prompt:**
-"Create a technical diagram showing async Python execution for AI agents. Include the main title 'Async Python for AI Engineers', and right below the title, place the name 'SAGAR RATHKANTHIWAR' centered in smaller caps. Left side: Sequential execution with 3 agents (A, B, C) in a single thread, each blocking the next. Right side: Parallel execution with all 3 agents running concurrently via asyncio.gather(). Use arrows to show execution flow, different colors for each agent, and labels for 'waiting' vs 'running' states. Include a timeline comparison showing 2-3x speedup. At the very bottom footer of the image, include the text 'Follow Sagar Rathkanthiwar | Repost to share with your network'. Style: Clean, minimalist, professional technical diagram with a light dotted background."
+**Do NOT include:** logos of other companies, photorealistic faces, dark header banners, heavy saturated colors, 3D renders, gradients, or text blocks longer than 3 lines per section.
 
 **Post Style Guidelines:**
 - Write like a developer talking to other developers
@@ -545,7 +557,7 @@ For Medium Articles:
 
 ## Image Generation Prompt
 
-{Image generation prompt with author branding}
+{Image generation prompt}
 
 ---
 
@@ -568,9 +580,15 @@ For LinkedIn Posts:
 
 ---
 
+## Hashtags
+
+{hashtag line — space-separated, 5–8 tags}
+
+---
+
 ## Image Generation Prompt
 
-{Image generation prompt with author branding}
+{Image generation prompt}
 ```
 
 For Twitter/X Threads:
